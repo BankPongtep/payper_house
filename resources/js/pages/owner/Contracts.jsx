@@ -4,13 +4,20 @@ import api from '../../api';
 
 export default function Contracts() {
     const [contracts, setContracts] = useState([]);
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
-        fetchContracts();
-    }, []);
+        const delayDebounceFn = setTimeout(() => {
+            fetchContracts();
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [search]);
 
     const fetchContracts = async () => {
-        const response = await api.get('/contracts');
+        const response = await api.get('/contracts', {
+            params: { search: search }
+        });
         setContracts(response.data);
     };
 
@@ -24,6 +31,16 @@ export default function Contracts() {
                 >
                     + New Contract
                 </Link>
+            </div>
+
+            <div className="mb-4">
+                <input
+                    type="text"
+                    placeholder="Search by contract number, customer name, or ID card..."
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
             </div>
 
             <div className="bg-white shadow rounded-lg overflow-hidden">

@@ -17,18 +17,28 @@ class ContractController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        
+        $search = $request->input('search');
+
         if ($user->role === 'owner') {
-             return $user->contracts()->with(['customer', 'asset'])->latest()->get();
+            $query = $user->contracts()->with(['customer', 'asset']);
+        } else {
+            // If customer, find contracts linked to their customer profile (if user_id linked)
+            $query = Contract::whereHas('customer', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->with(['asset']);
         }
-        
-        // If customer, find contracts linked to their customer profile (if user_id linked) or directly if we link user_id to contract
-        // Current Schema: Contracts -> customer_id (Customer Model). Customer Model -> user_id (User Model).
-        // So we need to find contracts where customer.user_id = auth user id.
-        
-        return Contract::whereHas('customer', function ($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->with(['asset'])->latest()->get();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('contract_number', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($cQ) use ($search) {
+                        $cQ->where('name', 'like', "%{$search}%")
+                            ->orWhere('id_card_number', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->latest()->get();
     }
 
     /**
@@ -67,7 +77,7 @@ class ContractController extends Controller
         // Simple Interest Formula: Interest = Principal * Rate * Time
         // Rate is percentage per year? Let's assume Rate is % per Year.
         $interestTotal = $principal * ($rate / 100) * ($months / 12);
-        
+
         $totalWithInterest = $principal + $interestTotal;
         $installmentAmount = ceil($totalWithInterest / $months); // Round up to avoid decimals issues
 
@@ -77,7 +87,7 @@ class ContractController extends Controller
         for ($i = 1; $i <= $months; $i++) {
             // Next due date: typically same day next month
             $dueDate = $date->copy()->addMonths($i);
-            
+
             $schedule[] = [
                 'installment_number' => $i,
                 'due_date' => $dueDate->format('Y-m-d'),
@@ -114,7 +124,7 @@ class ContractController extends Controller
 
         // Verify ownership of customer and asset
         // (Simplified check)
-        
+
         $calc = $this->calculateSchedule(
             $request->total_price,
             $request->down_payment,
@@ -154,7 +164,7 @@ class ContractController extends Controller
             $contract->asset()->update(['status' => 'leased']);
 
             DB::commit();
-            
+
             return response()->json($contract->load('installments'), 201);
 
         } catch (\Exception $e) {
@@ -188,7 +198,7 @@ class ContractController extends Controller
      */
     public function destroy(Request $request, Contract $contract)
     {
-         if ($request->user()->id !== $contract->owner_id) {
+        if ($request->user()->id !== $contract->owner_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
