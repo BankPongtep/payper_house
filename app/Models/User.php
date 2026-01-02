@@ -65,8 +65,48 @@ class User extends Authenticatable
 
     public function contractsAsCustomer()
     {
-        return $this->hasMany(Contract::class, 'customer_id')->orWhereHas('customer', function($q) {
-             $q->where('user_id', $this->id);
+        return $this->hasMany(Contract::class, 'customer_id')->orWhereHas('customer', function ($q) {
+            $q->where('user_id', $this->id);
         });
+    }
+
+    // Role helper methods
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->role === 'customer';
+    }
+
+    /**
+     * Check if user can create a specific role
+     */
+    public function canCreateRole(string $role): bool
+    {
+        if ($this->isAdmin()) {
+            return true; // Admin can create any role
+        }
+
+        if ($this->isOwner() && $role === 'customer') {
+            return true; // Owner can only create customers
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the customer record linked to this user (for customer users)
+     */
+    public function customerProfile()
+    {
+        return $this->hasOne(Customer::class, 'user_id');
     }
 }
