@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 
 export default function Login() {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const navigate = useNavigate();
@@ -12,7 +12,7 @@ export default function Login() {
         e.preventDefault();
         setError(null);
         try {
-            const response = await api.post('/login', { email, password });
+            const response = await api.post('/login', { username, password });
             localStorage.setItem('token', response.data.access_token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
 
@@ -22,6 +22,8 @@ export default function Login() {
                 navigate('/owner/dashboard');
             } else if (role === 'customer') {
                 navigate('/customer/dashboard');
+            } else if (role === 'admin') {
+                navigate('/admin/dashboard');
             } else {
                 navigate('/');
             }
@@ -37,12 +39,12 @@ export default function Login() {
                 {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">Username</label>
                         <input
-                            type="email"
+                            type="text"
                             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             required
                         />
                     </div>

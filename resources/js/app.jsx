@@ -14,6 +14,10 @@ import CreateContract from './pages/owner/CreateContract';
 import OwnerDashboard from './pages/owner/Dashboard';
 import CustomerLayout from './layouts/CustomerLayout';
 import CustomerDashboard from './pages/customer/Dashboard';
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/Dashboard';
+import UsersPage from './pages/admin/Users';
+import Settings from './pages/admin/Settings';
 
 function App() {
     return (
@@ -21,6 +25,12 @@ function App() {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+
+                <Route path="/admin" element={<AdminLayout />}>
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="users" element={<UsersPage />} />
+                    <Route path="settings" element={<Settings />} />
+                </Route>
 
                 {/* Protected Routes Placeholders */}
                 <Route path="/owner" element={<OwnerLayout />}>

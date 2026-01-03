@@ -4,19 +4,19 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateReceiptsTable extends Migration
 {
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('receipts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('contract_id')->constrained('contracts');
-            $table->foreignId('installment_id')->nullable()->constrained('installments'); // Could be null if general payment? Assuming linked for now.
-            $table->decimal('amount', 15, 2);
-            $table->foreignId('issued_by')->constrained('users'); // owner or admin
+            $table->foreignId('installment_id')->constrained()->onDelete('cascade');
+            $table->decimal('amount', 10, 2);
+            $table->string('payment_method'); // cash, bank_transfer
+            $table->timestamp('paid_at');
             $table->timestamps();
         });
     }
@@ -24,8 +24,8 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('receipts');
     }
-};
+}

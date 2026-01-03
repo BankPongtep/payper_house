@@ -6,6 +6,7 @@ import { User, Mail, Lock, UserPlus, AlertCircle } from 'lucide-react';
 export default function Register() {
     const [formData, setFormData] = useState({
         name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -82,6 +83,24 @@ export default function Register() {
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                     placeholder="John Doe"
                                     value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                    <User size={18} />
+                                </div>
+                                <input
+                                    type="text"
+                                    name="username"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="johndoe123"
+                                    value={formData.username}
                                     onChange={handleChange}
                                     required
                                 />

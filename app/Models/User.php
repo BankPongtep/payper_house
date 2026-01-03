@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, Notifiable, \Illuminate\Database\Eloquent\SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -20,9 +20,24 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'role',
+        'is_locked',
+        'phone',
+        'id_card_number',
+        'address', // Keep for backward compatibility or general use
+        'address_house_no',
+        'address_village',
+        'address_floor',
+        'address_moo',
+        'address_soi',
+        'address_road',
+        'address_sub_district',
+        'address_district',
+        'address_province',
+        'address_postal_code',
     ];
 
     /**
@@ -36,17 +51,16 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'is_locked' => 'boolean',
+        'deleted_at' => 'datetime',
+        // 'password' => 'hashed', // 'hashed' cast is not available in Laravel 8, handled by controller hash or mutator
+    ];
 
     public function assets()
     {

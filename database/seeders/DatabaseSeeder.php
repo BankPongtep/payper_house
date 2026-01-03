@@ -1,8 +1,8 @@
 <?php
 
-namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Customer;
@@ -10,7 +10,7 @@ use App\Models\Asset;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
+    // use WithoutModelEvents; // Not available in Laravel 8
 
     /**
      * Seed the application's database.
@@ -18,12 +18,54 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ====================================
+        // 0. Create Default Settings
+        // ====================================
+        $settings = [
+            [
+                'key' => 'receipt_prefix',
+                'value' => 'REC-',
+                'label' => 'รูปแบบใบเสร็จ (Prefix)',
+                'group' => 'document',
+                'type' => 'text'
+            ],
+            [
+                'key' => 'receipt_running_number',
+                'value' => '1000',
+                'label' => 'เลขรันเอกสารเริ่มต้น (Running Number)',
+                'group' => 'document',
+                'type' => 'number'
+            ],
+            [
+                'key' => 'tax_rate',
+                'value' => '7',
+                'label' => 'อัตราภาษี (%)',
+                'group' => 'finance',
+                'type' => 'number'
+            ],
+            [
+                'key' => 'interest_rate',
+                'value' => '15',
+                'label' => 'อัตราดอกเบี้ยเริ่มต้น (% ต่อปี)',
+                'group' => 'finance',
+                'type' => 'number'
+            ],
+        ];
+
+        foreach ($settings as $setting) {
+            \App\Models\Setting::updateOrCreate(
+                ['key' => $setting['key']],
+                $setting
+            );
+        }
+
+        // ====================================
         // 1. Create Admin User
         // ====================================
         $admin = User::firstOrCreate(
             ['email' => 'admin@payper.com'],
             [
                 'name' => 'ผู้ดูแลระบบ',
+                'username' => 'admin',
                 'password' => bcrypt('password'),
                 'role' => 'admin',
             ]
@@ -36,6 +78,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'owner1@payper.com'],
             [
                 'name' => 'สมชาย เจ้าของบ้าน',
+                'username' => 'owner1',
                 'password' => bcrypt('password'),
                 'role' => 'owner',
             ]
@@ -45,6 +88,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'owner2@payper.com'],
             [
                 'name' => 'สมหญิง เจ้าของห้อง',
+                'username' => 'owner2',
                 'password' => bcrypt('password'),
                 'role' => 'owner',
             ]
@@ -59,6 +103,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'tenant1@payper.com'],
             [
                 'name' => 'นายสมปอง ผู้เช่า',
+                'username' => 'tenant1',
                 'password' => bcrypt('password'),
                 'role' => 'customer',
             ]
@@ -68,6 +113,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'tenant2@payper.com'],
             [
                 'name' => 'นางสาวมะลิ รักเรียน',
+                'username' => 'tenant2',
                 'password' => bcrypt('password'),
                 'role' => 'customer',
             ]
@@ -78,6 +124,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'tenant3@payper.com'],
             [
                 'name' => 'นายวิชัย ใจดี',
+                'username' => 'tenant3',
                 'password' => bcrypt('password'),
                 'role' => 'customer',
             ]
@@ -87,6 +134,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'tenant4@payper.com'],
             [
                 'name' => 'นางสาวน้ำฝน สายลม',
+                'username' => 'tenant4',
                 'password' => bcrypt('password'),
                 'role' => 'customer',
             ]
