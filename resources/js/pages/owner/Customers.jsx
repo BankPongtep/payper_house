@@ -1,8 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api';
 
 export default function Customers() {
+    const { t, i18n } = useTranslation();
     const [users, setUsers] = useState([]);
+
+    // ... (rest of state)
+
+    // Helper to get localized name
+    const getName = (item) => {
+        if (!item) return '';
+        if (i18n.language === 'en' && item.name_en) {
+            return item.name_en;
+        }
+        return item.name_th;
+    };
+
+    // ...
+
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -282,17 +299,17 @@ export default function Customers() {
         }
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <div>{t('common.loading')}</div>;
 
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Customers Management</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{t('customer.management')}</h1>
                 <button
                     onClick={handleOpenCreate}
                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                 >
-                    Add New Customer
+                    {t('customer.create_new')}
                 </button>
             </div>
 
@@ -302,11 +319,11 @@ export default function Customers() {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address (Province)</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.name')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.username')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.phone')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('address.province')}</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -337,20 +354,20 @@ export default function Customers() {
                                                     onClick={() => handleOpenEdit(user)}
                                                     className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                 >
-                                                    Edit Details
+                                                    {t('common.edit')}
                                                 </button>
                                                 <button
                                                     onClick={() => handleOpenPassword(user)}
                                                     className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                 >
-                                                    Change Password
+                                                    {t('common.change_password')}
                                                 </button>
                                                 <div className="border-t border-gray-100 my-1"></div>
                                                 <button
                                                     onClick={() => handleDelete(user)}
                                                     className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                                                 >
-                                                    Delete
+                                                    {t('common.delete')}
                                                 </button>
                                             </div>
                                         </div>
@@ -378,7 +395,7 @@ export default function Customers() {
                             onClick={e => e.stopPropagation()}
                         >
                             <h2 className="text-xl font-bold mb-6 border-b pb-2">
-                                {modalMode === 'create' ? 'Add New Customer' : modalMode === 'edit' ? 'Edit Customer' : 'Change Password'}
+                                {modalMode === 'create' ? t('customer.create_new') : modalMode === 'edit' ? t('customer.edit') : t('common.change_password')}
                             </h2>
 
                             <form onSubmit={handleSubmit}>
@@ -388,7 +405,7 @@ export default function Customers() {
                                         <div className="space-y-4">
                                             <h3 className="text-md font-semibold text-gray-700 bg-gray-50 p-2 rounded">ข้อมูลบัญชี (Account)</h3>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Name</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.name')}</label>
                                                 <input
                                                     type="text"
                                                     name="name"
@@ -399,7 +416,7 @@ export default function Customers() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Username</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.username')}</label>
                                                 <input
                                                     type="text"
                                                     name="username"
@@ -411,7 +428,7 @@ export default function Customers() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Email</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.email')}</label>
                                                 <input
                                                     type="email"
                                                     name="email"
@@ -422,7 +439,7 @@ export default function Customers() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Phone</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.phone')}</label>
                                                 <input
                                                     type="text"
                                                     name="phone"
@@ -432,7 +449,7 @@ export default function Customers() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">ID Card Number</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.id_card')}</label>
                                                 <input
                                                     type="text"
                                                     name="id_card_number"
@@ -445,7 +462,7 @@ export default function Customers() {
                                             {modalMode === 'create' && (
                                                 <>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700">Password</label>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
                                                         <input
                                                             type="password"
                                                             name="password"
@@ -456,7 +473,7 @@ export default function Customers() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
                                                         <input
                                                             type="password"
                                                             name="password_confirmation"
@@ -476,7 +493,7 @@ export default function Customers() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">บ้านเลขที่ (House No.)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.house_no')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_house_no"
@@ -486,7 +503,7 @@ export default function Customers() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">หมู่บ้าน/อาคาร (Village)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.village')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_village"
@@ -499,7 +516,7 @@ export default function Customers() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">ชั้น (Floor)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.floor')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_floor"
@@ -510,7 +527,7 @@ export default function Customers() {
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">หมู่ที่ (Moo)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.moo')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_moo"
@@ -523,7 +540,7 @@ export default function Customers() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">ซอย (Soi)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.soi')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_soi"
@@ -533,7 +550,7 @@ export default function Customers() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">ถนน (Road)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.road')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_road"
@@ -546,7 +563,7 @@ export default function Customers() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">ตำบล/แขวง (Sub-district)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.sub_district')}</label>
                                                     <select
                                                         name="address_sub_district"
                                                         value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
@@ -554,14 +571,14 @@ export default function Customers() {
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                         disabled={!formData.address_district}
                                                     >
-                                                        <option value="">เลือกตำบล/แขวง</option>
+                                                        <option value="">{t('address.select_sub_district')}</option>
                                                         {tambons.map(t => (
-                                                            <option key={t.id} value={t.id}>{t.name_th}</option>
+                                                            <option key={t.id} value={t.id}>{getName(t)}</option>
                                                         ))}
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">อำเภอ/เขต (District)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.district')}</label>
                                                     <select
                                                         name="address_district"
                                                         value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
@@ -569,9 +586,9 @@ export default function Customers() {
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                         disabled={!formData.address_province}
                                                     >
-                                                        <option value="">เลือกอำเภอ/เขต</option>
+                                                        <option value="">{t('address.select_district')}</option>
                                                         {amphures.map(a => (
-                                                            <option key={a.id} value={a.id}>{a.name_th}</option>
+                                                            <option key={a.id} value={a.id}>{getName(a)}</option>
                                                         ))}
                                                     </select>
                                                 </div>
@@ -579,21 +596,21 @@ export default function Customers() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">จังหวัด (Province)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.province')}</label>
                                                     <select
                                                         name="address_province"
                                                         value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
                                                         onChange={handleProvinceChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                     >
-                                                        <option value="">เลือกจังหวัด</option>
+                                                        <option value="">{t('address.select_province')}</option>
                                                         {provinces.map(p => (
-                                                            <option key={p.id} value={p.id}>{p.name_th}</option>
+                                                            <option key={p.id} value={p.id}>{getName(p)}</option>
                                                         ))}
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">รหัสไปรษณีย์ (Postal Code)</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.postal_code')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_postal_code"
@@ -610,7 +627,7 @@ export default function Customers() {
                                     // Password Change Mode
                                     <div className="max-w-md mx-auto">
                                         <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700">New Password</label>
+                                            <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
                                             <input
                                                 type="password"
                                                 name="password"
@@ -621,7 +638,7 @@ export default function Customers() {
                                             />
                                         </div>
                                         <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                                            <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
                                             <input
                                                 type="password"
                                                 name="password_confirmation"
@@ -640,13 +657,13 @@ export default function Customers() {
                                         onClick={handleCloseModal}
                                         className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
                                     >
-                                        Cancel
+                                        {t('common.cancel')}
                                     </button>
                                     <button
                                         type="submit"
                                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                                     >
-                                        Save Customer
+                                        {t('common.save')}
                                     </button>
                                 </div>
                             </form>

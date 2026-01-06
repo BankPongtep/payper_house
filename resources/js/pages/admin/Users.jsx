@@ -1,13 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api';
 
 export default function Users() {
+    const { t, i18n } = useTranslation();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [modalMode, setModalMode] = useState('create'); // create, edit, password
     const [currentUser, setCurrentUser] = useState(null);
+
+    // Helper to get localized name
+    const getName = (item) => {
+        if (!item) return '';
+        if (i18n.language === 'en' && item.name_en) {
+            return item.name_en;
+        }
+        return item.name_th;
+    };
 
     // Dropdown state
     const [activeMenuId, setActiveMenuId] = useState(null);
@@ -295,17 +306,17 @@ export default function Users() {
         }
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <div>{t('common.loading')}</div>;
 
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{t('user.management')}</h1>
                 <button
                     onClick={handleOpenCreate}
                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                 >
-                    Add New User
+                    {t('user.create_new')}
                 </button>
             </div>
 
@@ -316,12 +327,12 @@ export default function Users() {
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.username')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.name')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.phone')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.role')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.status')}</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -331,7 +342,7 @@ export default function Users() {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.username}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phone || '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{user.role}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{t(`roles.${user.role}`)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_locked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                                         {user.is_locked ? 'Locked' : 'Active'}
@@ -358,26 +369,26 @@ export default function Users() {
                                                     onClick={() => handleOpenEdit(user)}
                                                     className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                 >
-                                                    Edit Details
+                                                    {t('common.edit')}
                                                 </button>
                                                 <button
                                                     onClick={() => handleOpenPassword(user)}
                                                     className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                 >
-                                                    Change Password
+                                                    {t('common.change_password')}
                                                 </button>
                                                 <button
                                                     onClick={() => handleToggleLock(user)}
                                                     className={`w-full text-left block px-4 py-2 text-sm hover:bg-gray-100 ${user.is_locked ? 'text-green-600' : 'text-amber-600'}`}
                                                 >
-                                                    {user.is_locked ? 'Unlock Account' : 'Lock Account'}
+                                                    {user.is_locked ? t('user.unlock_user') : t('user.lock_user')}
                                                 </button>
                                                 <div className="border-t border-gray-100 my-1"></div>
                                                 <button
                                                     onClick={() => handleDelete(user)}
                                                     className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                                                 >
-                                                    Delete User
+                                                    {t('common.delete')}
                                                 </button>
                                             </div>
                                         </div>
@@ -405,7 +416,7 @@ export default function Users() {
                             onClick={e => e.stopPropagation()}
                         >
                             <h2 className="text-xl font-bold mb-6 border-b pb-2">
-                                {modalMode === 'create' ? 'Create New User' : modalMode === 'edit' ? 'Edit User' : 'Change Password'}
+                                {modalMode === 'create' ? t('user.create_new') : modalMode === 'edit' ? t('user.edit_user') : t('common.change_password')}
                             </h2>
 
                             <form onSubmit={handleSubmit}>
@@ -415,7 +426,7 @@ export default function Users() {
                                         <div className="space-y-4">
                                             <h3 className="text-md font-semibold text-gray-700 bg-gray-50 p-2 rounded">ข้อมูลบัญชี (Account)</h3>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Name</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.name')}</label>
                                                 <input
                                                     type="text"
                                                     name="name"
@@ -426,7 +437,7 @@ export default function Users() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Username</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.username')}</label>
                                                 <input
                                                     type="text"
                                                     name="username"
@@ -438,7 +449,7 @@ export default function Users() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Email</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.email')}</label>
                                                 <input
                                                     type="email"
                                                     name="email"
@@ -449,7 +460,7 @@ export default function Users() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Phone</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.phone')}</label>
                                                 <input
                                                     type="text"
                                                     name="phone"
@@ -459,7 +470,7 @@ export default function Users() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">ID Card Number</label>
+                                                <label className="block text-sm font-medium text-gray-700">{t('user.id_card')}</label>
                                                 <input
                                                     type="text"
                                                     name="id_card_number"
@@ -470,23 +481,23 @@ export default function Users() {
                                             </div>
                                             {modalMode === 'create' && (
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">Role</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('user.role')}</label>
                                                     <select
                                                         name="role"
                                                         value={formData.role}
                                                         onChange={handleChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                     >
-                                                        <option value="customer">Customer</option>
-                                                        <option value="owner">Owner</option>
-                                                        <option value="admin">Admin</option>
+                                                        <option value="customer">{t('roles.customer')}</option>
+                                                        <option value="owner">{t('roles.owner')}</option>
+                                                        <option value="admin">{t('roles.admin')}</option>
                                                     </select>
                                                 </div>
                                             )}
                                             {modalMode === 'create' && (
                                                 <>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700">Password</label>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
                                                         <input
                                                             type="password"
                                                             name="password"
@@ -497,7 +508,7 @@ export default function Users() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
                                                         <input
                                                             type="password"
                                                             name="password_confirmation"
@@ -517,97 +528,97 @@ export default function Users() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">บ้านเลขที่</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.house_no')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_house_no"
                                                         value={formData.address_house_no}
                                                         onChange={handleChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder="House No."
+                                                        placeholder={t('address.house_no')}
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">หมู่บ้าน/อาคาร</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.village')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_village"
                                                         value={formData.address_village}
                                                         onChange={handleChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder="Village/Building"
+                                                        placeholder={t('address.village')}
                                                     />
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">ชั้น</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.floor')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_floor"
                                                         value={formData.address_floor}
                                                         onChange={handleChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder="Floor"
+                                                        placeholder={t('address.floor')}
                                                     />
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">หมู่ที่</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.moo')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_moo"
                                                         value={formData.address_moo}
                                                         onChange={handleChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder="Moo"
+                                                        placeholder={t('address.moo')}
                                                     />
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">ซอย</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.soi')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_soi"
                                                         value={formData.address_soi}
                                                         onChange={handleChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder="Soi"
+                                                        placeholder={t('address.soi')}
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">ถนน</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.road')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_road"
                                                         value={formData.address_road}
                                                         onChange={handleChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder="Road"
+                                                        placeholder={t('address.road')}
                                                     />
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">จังหวัด</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.province')}</label>
                                                     <select
                                                         name="address_province"
                                                         value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
                                                         onChange={handleProvinceChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                     >
-                                                        <option value="">เลือกจังหวัด</option>
+                                                        <option value="">{t('address.select_province')}</option>
                                                         {provinces.map(p => (
-                                                            <option key={p.id} value={p.id}>{p.name_th}</option>
+                                                            <option key={p.id} value={p.id}>{getName(p)}</option>
                                                         ))}
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">อำเภอ/เขต</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.district')}</label>
                                                     <select
                                                         name="address_district"
                                                         value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
@@ -615,9 +626,9 @@ export default function Users() {
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                         disabled={!formData.address_province}
                                                     >
-                                                        <option value="">เลือกอำเภอ/เขต</option>
+                                                        <option value="">{t('address.select_district')}</option>
                                                         {amphures.map(a => (
-                                                            <option key={a.id} value={a.id}>{a.name_th}</option>
+                                                            <option key={a.id} value={a.id}>{getName(a)}</option>
                                                         ))}
                                                     </select>
                                                 </div>
@@ -625,7 +636,7 @@ export default function Users() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">ตำบล/แขวง</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.sub_district')}</label>
                                                     <select
                                                         name="address_sub_district"
                                                         value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
@@ -633,21 +644,21 @@ export default function Users() {
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                         disabled={!formData.address_district}
                                                     >
-                                                        <option value="">เลือกตำบล/แขวง</option>
+                                                        <option value="">{t('address.select_sub_district')}</option>
                                                         {tambons.map(t => (
-                                                            <option key={t.id} value={t.id}>{t.name_th}</option>
+                                                            <option key={t.id} value={t.id}>{getName(t)}</option>
                                                         ))}
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">รหัสไปรษณีย์</label>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('address.postal_code')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_postal_code"
                                                         value={formData.address_postal_code}
                                                         onChange={handleChange}
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                                                        placeholder="Postal Code"
+                                                        placeholder={t('address.postal_code')}
                                                         readOnly
                                                     />
                                                 </div>
@@ -658,7 +669,7 @@ export default function Users() {
                                     // Password Change Mode
                                     <div className="max-w-md mx-auto">
                                         <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700">New Password</label>
+                                            <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
                                             <input
                                                 type="password"
                                                 name="password"
@@ -669,7 +680,7 @@ export default function Users() {
                                             />
                                         </div>
                                         <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                                            <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
                                             <input
                                                 type="password"
                                                 name="password_confirmation"
@@ -688,13 +699,13 @@ export default function Users() {
                                         onClick={handleCloseModal}
                                         className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
                                     >
-                                        Cancel
+                                        {t('common.cancel')}
                                     </button>
                                     <button
                                         type="submit"
                                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                                     >
-                                        Save User
+                                        {t('common.save')}
                                     </button>
                                 </div>
                             </form>

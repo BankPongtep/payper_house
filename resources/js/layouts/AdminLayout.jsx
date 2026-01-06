@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import api from '../api';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function AdminLayout() {
     const navigate = useNavigate();
@@ -38,6 +39,9 @@ export default function AdminLayout() {
                     </Link>
                 </nav>
                 <div className="absolute bottom-0 w-64 p-6 border-t">
+                    <div className="mb-4">
+                        <LanguageSwitcher />
+                    </div>
                     <div className="flex items-center mb-4">
                         <div className="ml-3">
                             <p className="text-sm font-medium text-gray-700">{user?.name}</p>

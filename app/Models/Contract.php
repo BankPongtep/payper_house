@@ -12,13 +12,19 @@ class Contract extends Model
         'asset_id',
         'contract_number',
         'type',
+        'contract_type',
         'total_price',
         'down_payment',
         'principal_amount',
         'interest_rate',
         'installments_count',
         'installment_amount',
+        'monthly_rent',
+        'balloon_payment',
         'start_date',
+        'end_date',
+        'original_end_date',
+        'parent_contract_id',
         'status',
     ];
 
@@ -45,5 +51,15 @@ class Contract extends Model
     public function receipts()
     {
         return $this->hasMany(Receipt::class);
+    }
+
+    public function parentContract()
+    {
+        return $this->belongsTo(Contract::class, 'parent_contract_id');
+    }
+
+    public function extensions()
+    {
+        return $this->hasMany(Contract::class, 'parent_contract_id');
     }
 }

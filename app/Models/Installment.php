@@ -8,12 +8,10 @@ class Installment extends Model
 {
     protected $fillable = [
         'contract_id',
-        'installment_number',
         'due_date',
-        'amount_due',
-        'amount_paid',
+        'amount',
+        'paid_amount',
         'status',
-        'paid_at',
     ];
 
     protected $casts = [
@@ -29,5 +27,10 @@ class Installment extends Model
     public function receipts()
     {
         return $this->hasMany(Receipt::class);
+    }
+
+    public function receipt()
+    {
+        return $this->hasOne(Receipt::class)->latest();
     }
 }

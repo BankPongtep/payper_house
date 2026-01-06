@@ -24,4 +24,8 @@ rsync -avz --exclude 'vendor' \
 ssh $TARGET_USER@$TARGET_HOST "chown -R www-data:www-data $TARGET_DIR"
 ssh $TARGET_USER@$TARGET_HOST "chmod -R 775 $TARGET_DIR/storage $TARGET_DIR/bootstrap/cache"
 
-echo "Files synced successfully."
+# Run migrations
+echo "Running migrations..."
+ssh $TARGET_USER@$TARGET_HOST "cd $TARGET_DIR && php artisan migrate --force"
+
+echo "Deploy finished successfully."

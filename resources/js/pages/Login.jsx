@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function Login() {
+    const { t } = useTranslation();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
@@ -28,18 +31,21 @@ export default function Login() {
                 navigate('/');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed');
+            setError(err.response?.data?.message || t('auth.login_failed'));
         }
     };
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-100">
-            <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-                <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Login to Payper House</h2>
+            <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative">
+                <div className="absolute top-4 right-4">
+                    <LanguageSwitcher />
+                </div>
+                <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">{t('auth.login_title')}</h2>
                 {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">{t('user.username')}</label>
                         <input
                             type="text"
                             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -49,7 +55,7 @@ export default function Login() {
                         />
                     </div>
                     <div className="mb-6">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">{t('common.password')}</label>
                         <input
                             type="password"
                             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -62,10 +68,10 @@ export default function Login() {
                         type="submit"
                         className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition duration-200"
                     >
-                        Sign In
+                        {t('auth.login_button')}
                     </button>
                     <div className="mt-4 text-center">
-                        <Link to="/register" className="text-blue-500 hover:text-blue-700 text-sm">Don't have an account? Register</Link>
+                        <Link to="/register" className="text-blue-500 hover:text-blue-700 text-sm">{t('auth.register_link')}</Link>
                     </div>
                 </form>
             </div>

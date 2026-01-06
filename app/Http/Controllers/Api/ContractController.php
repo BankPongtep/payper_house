@@ -49,15 +49,11 @@ class ContractController extends Controller
         $request->validate([
             'total_price' => 'required|numeric',
             'down_payment' => 'required|numeric',
-            'interest_rate' => 'required|numeric', // Annual or Monthly? Assuming Flat Monthly for simplicity based on common leasing or Annual Flat. Let's assume Annual Flat for now.
-            // Actually, requirements said "calculate interest". Common th Leasing is Flat Rate Monthly or Yearly.
-            // Let's implement Simple Interest Calculation:
-            // Principal = Total - Down
-            // Total Interest = Principal * (Rate/100) * (Months/12) -> If rate is annual.
-            // OR Principal * (Rate/100) * Months -> If rate is monthly.
-            // Let's assume Rate is YEARLY PERCENTAGE for now.
+            'interest_rate' => 'required|numeric',
             'installments_count' => 'required|integer|min:1',
             'start_date' => 'required|date',
+            'contract_type' => 'nullable|in:installment,hire_purchase',
+            'balloon_percent' => 'nullable|numeric|min:0|max:100', // % of principal for balloon
         ]);
 
         $preview = $this->calculateSchedule(
@@ -65,27 +61,38 @@ class ContractController extends Controller
             $request->down_payment,
             $request->interest_rate,
             $request->installments_count,
-            $request->start_date
+            $request->start_date,
+            $request->contract_type ?? 'installment',
+            $request->balloon_percent ?? 0
         );
 
         return response()->json($preview);
     }
 
-    private function calculateSchedule($total, $down, $rate, $months, $startDate)
+    private function calculateSchedule($total, $down, $rate, $months, $startDate, $contractType = 'installment', $balloonPercent = 0)
     {
         $principal = $total - $down;
-        // Simple Interest Formula: Interest = Principal * Rate * Time
-        // Rate is percentage per year? Let's assume Rate is % per Year.
-        $interestTotal = $principal * ($rate / 100) * ($months / 12);
 
-        $totalWithInterest = $principal + $interestTotal;
-        $installmentAmount = ceil($totalWithInterest / $months); // Round up to avoid decimals issues
+        // For hire_purchase, calculate balloon payment (ยอดกู้ธนาคาร)
+        $balloonPayment = 0;
+        $financedPrincipal = $principal;
+
+        if ($contractType === 'hire_purchase' && $balloonPercent > 0) {
+            $balloonPayment = $principal * ($balloonPercent / 100);
+            $financedPrincipal = $principal - $balloonPayment; // ส่วนที่ผ่อนกับเจ้าของ
+        }
+
+        // Simple Interest Formula: Interest = Principal * Rate * Time
+        // Rate is percentage per year
+        $interestTotal = $financedPrincipal * ($rate / 100) * ($months / 12);
+
+        $totalWithInterest = $financedPrincipal + $interestTotal;
+        $installmentAmount = ceil($totalWithInterest / $months); // Round up
 
         $schedule = [];
         $date = Carbon::parse($startDate);
 
         for ($i = 1; $i <= $months; $i++) {
-            // Next due date: typically same day next month
             $dueDate = $date->copy()->addMonths($i);
 
             $schedule[] = [
@@ -95,13 +102,19 @@ class ContractController extends Controller
             ];
         }
 
+        // Calculate end date
+        $endDate = $date->copy()->addMonths($months)->format('Y-m-d');
+
         return [
             'total_price' => $total,
             'down_payment' => $down,
             'principal' => $principal,
-            'interest_total' => $interestTotal,
-            'total_payable' => $totalWithInterest,
+            'financed_principal' => $financedPrincipal,
+            'interest_total' => round($interestTotal, 2),
+            'total_payable' => round($totalWithInterest, 2),
             'installment_amount' => $installmentAmount,
+            'balloon_payment' => round($balloonPayment, 2),
+            'end_date' => $endDate,
             'schedule' => $schedule,
         ];
     }
@@ -120,17 +133,21 @@ class ContractController extends Controller
             'interest_rate' => 'required|numeric',
             'installments_count' => 'required|integer',
             'start_date' => 'required|date',
+            'contract_type' => 'nullable|in:installment,hire_purchase',
+            'balloon_percent' => 'nullable|numeric',
         ]);
 
-        // Verify ownership of customer and asset
-        // (Simplified check)
+        $contractType = $request->contract_type ?? 'installment';
+        $balloonPercent = $request->balloon_percent ?? 0;
 
         $calc = $this->calculateSchedule(
             $request->total_price,
             $request->down_payment,
             $request->interest_rate,
             $request->installments_count,
-            $request->start_date
+            $request->start_date,
+            $contractType,
+            $balloonPercent
         );
 
         DB::beginTransaction();
@@ -140,22 +157,25 @@ class ContractController extends Controller
                 'asset_id' => $request->asset_id,
                 'contract_number' => $request->contract_number,
                 'type' => $request->type ?? 'hire_purchase',
+                'contract_type' => $contractType,
                 'total_price' => $request->total_price,
                 'down_payment' => $request->down_payment,
                 'principal_amount' => $calc['principal'],
                 'interest_rate' => $request->interest_rate,
                 'installments_count' => $request->installments_count,
                 'installment_amount' => $calc['installment_amount'],
+                'balloon_payment' => $calc['balloon_payment'],
                 'start_date' => $request->start_date,
+                'end_date' => $calc['end_date'],
+                'original_end_date' => $calc['end_date'],
                 'status' => 'active',
             ]);
 
             // Create Installments
             foreach ($calc['schedule'] as $inst) {
                 $contract->installments()->create([
-                    'installment_number' => $inst['installment_number'],
                     'due_date' => $inst['due_date'],
-                    'amount_due' => $inst['amount_due'],
+                    'amount' => $inst['amount_due'],
                     'status' => 'pending',
                 ]);
             }

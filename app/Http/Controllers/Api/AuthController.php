@@ -23,13 +23,13 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'The provided credentials do not match our records.',
+                'message' => trans('auth.failed'),
             ], 422);
         }
 
         if ($user->is_locked) {
             return response()->json([
-                'message' => 'Your account is locked. Please contact support.',
+                'message' => trans('auth.locked'),
             ], 403);
         }
 
@@ -38,7 +38,7 @@ class AuthController extends Controller
         \App\Helpers\LogActivity::addToLog('LOGIN', 'User logged in successfully.');
 
         return response()->json([
-            'message' => 'Login successful',
+            'message' => trans('auth.login_success'),
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
@@ -69,7 +69,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'User registered successfully',
+            'message' => trans('auth.register_success'),
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
@@ -81,7 +81,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out successfully',
+            'message' => trans('auth.logout_success'),
         ]);
     }
 

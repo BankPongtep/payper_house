@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { User, Mail, Lock, UserPlus, AlertCircle } from 'lucide-react';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function Register() {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         name: '',
         username: '',
@@ -37,7 +40,10 @@ export default function Register() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gray-50 relative">
+            <div className="absolute top-4 right-4 z-50">
+                <LanguageSwitcher />
+            </div>
             {/* Left Side - Image/Branding */}
             <div className="hidden lg:flex w-1/2 bg-blue-600 items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-800 z-10"></div>
@@ -45,9 +51,9 @@ export default function Register() {
                 <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-white opacity-10 rounded-full mix-blend-overlay blur-3xl"></div>
 
                 <div className="relative z-20 text-white p-12 max-w-lg">
-                    <h1 className="text-5xl font-bold mb-6">Join Payper House</h1>
+                    <h1 className="text-5xl font-bold mb-6">{t('auth.join_title')}</h1>
                     <p className="text-xl text-blue-100 leading-relaxed">
-                        Start managing your leasing business with professional tools designed for growth.
+                        {t('auth.join_subtitle')}
                     </p>
                 </div>
             </div>
@@ -59,8 +65,8 @@ export default function Register() {
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600 mb-4">
                             <UserPlus size={24} />
                         </div>
-                        <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-                        <p className="text-gray-500 mt-2">Get started with your free account today</p>
+                        <h2 className="text-3xl font-bold text-gray-900">{t('auth.create_account')}</h2>
+                        <p className="text-gray-500 mt-2">{t('auth.get_started')}</p>
                     </div>
 
                     {error && (
@@ -72,7 +78,7 @@ export default function Register() {
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('auth.full_name')}</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                     <User size={18} />
@@ -90,7 +96,7 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('user.username')}</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                     <User size={18} />
@@ -108,7 +114,7 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('auth.email_address')}</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                     <Mail size={18} />
@@ -126,7 +132,7 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.password')}</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                     <Lock size={18} />
@@ -144,7 +150,7 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.confirm_password')}</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                     <Lock size={18} />
@@ -166,14 +172,14 @@ export default function Register() {
                             disabled={isLoading}
                             className={`w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
-                            {isLoading ? 'Creating account...' : 'Create Account'}
+                            {isLoading ? t('auth.creating_account') : t('auth.create_account')}
                         </button>
                     </form>
 
                     <div className="mt-8 text-center text-sm text-gray-500">
-                        Already have an account?{' '}
+                        {t('auth.already_have_account')}{' '}
                         <Link to="/login" className="text-blue-600 font-semibold hover:text-blue-800 hover:underline">
-                            Sign in here
+                            {t('auth.sign_in_here')}
                         </Link>
                     </div>
                 </div>
