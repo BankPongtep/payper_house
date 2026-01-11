@@ -19,6 +19,8 @@ class Installment extends Model
         'paid_at' => 'datetime',
     ];
 
+    protected $appends = ['latest_payment_proof'];
+
     public function contract()
     {
         return $this->belongsTo(Contract::class);
@@ -39,8 +41,8 @@ class Installment extends Model
         return $this->hasMany(PaymentProof::class);
     }
 
-    public function latestPaymentProof()
+    public function getLatestPaymentProofAttribute()
     {
-        return $this->hasOne(PaymentProof::class)->latestOfMany();
+        return $this->paymentProofs->sortByDesc('created_at')->first();
     }
 }
