@@ -39,6 +39,17 @@ export default function CustomerContractDetail() {
         return dateString.split('T')[0];
     };
 
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleString('th-TH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     const getStatusBadge = (status) => {
         const config = {
             pending: { color: 'bg-yellow-100 text-yellow-700', icon: Clock },
@@ -196,6 +207,7 @@ export default function CustomerContractDetail() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('contract.due_date')}</th>
                                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('contract.amount')}</th>
                                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">หมายเหตุ</th>
                                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('contract.receipt')}</th>
                             </tr>
                         </thead>
@@ -206,16 +218,19 @@ export default function CustomerContractDetail() {
                                     <td className="px-4 py-3 text-sm">{formatDate(inst.due_date)}</td>
                                     <td className="px-4 py-3 text-sm text-right">฿{Number(inst.amount).toLocaleString()}</td>
                                     <td className="px-4 py-3 text-center">
-                                        <div className="flex flex-col items-center gap-1">
-                                            {getStatusBadge(isOverdue(inst.due_date, inst.status) && inst.status !== 'paid' ? 'overdue' : inst.status)}
-
-                                            {/* Show Rejection Reason */}
-                                            {inst.latest_payment_proof?.status === 'rejected' && inst.status !== 'paid' && (
-                                                <div className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded max-w-[200px]">
-                                                    <span className="font-semibold">{t('payment.rejected')}:</span> {inst.latest_payment_proof.note || '-'}
-                                                </div>
-                                            )}
-                                        </div>
+                                        {getStatusBadge(isOverdue(inst.due_date, inst.status) && inst.status !== 'paid' ? 'overdue' : inst.status)}
+                                    </td>
+                                    <td className="px-4 py-3 text-left">
+                                        {inst.latest_payment_proof?.status === 'rejected' && inst.status !== 'paid' ? (
+                                            <div className="text-xs text-red-600">
+                                                <p className="font-semibold">{inst.latest_payment_proof.note || '-'}</p>
+                                                <p className="text-gray-500 text-[10px] mt-1">
+                                                    {formatDateTime(inst.latest_payment_proof.reviewed_at)}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-300">-</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         {inst.receipt ? (

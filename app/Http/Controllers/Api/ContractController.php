@@ -201,7 +201,7 @@ class ContractController extends Controller
         if ($request->user()->id !== $contract->owner_id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        return $contract->load('installments', 'customer', 'asset');
+        return $contract->load('installments', 'customer', 'asset', 'receipts');
     }
 
     /**
