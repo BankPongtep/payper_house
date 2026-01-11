@@ -206,7 +206,16 @@ export default function CustomerContractDetail() {
                                     <td className="px-4 py-3 text-sm">{formatDate(inst.due_date)}</td>
                                     <td className="px-4 py-3 text-sm text-right">฿{Number(inst.amount).toLocaleString()}</td>
                                     <td className="px-4 py-3 text-center">
-                                        {getStatusBadge(isOverdue(inst.due_date, inst.status) && inst.status !== 'paid' ? 'overdue' : inst.status)}
+                                        <div className="flex flex-col items-center gap-1">
+                                            {getStatusBadge(isOverdue(inst.due_date, inst.status) && inst.status !== 'paid' ? 'overdue' : inst.status)}
+
+                                            {/* Show Rejection Reason */}
+                                            {inst.latest_payment_proof?.status === 'rejected' && inst.status !== 'paid' && (
+                                                <div className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded max-w-[200px]">
+                                                    <span className="font-semibold">{t('payment.rejected')}:</span> {inst.latest_payment_proof.note || '-'}
+                                                </div>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         {inst.receipt ? (

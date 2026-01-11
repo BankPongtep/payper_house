@@ -169,6 +169,9 @@ class PaymentProofController extends Controller
             'reviewed_at' => Carbon::now(),
         ]);
 
+        // Revert installment status to pending so customer can resubmit
+        $proof->installment->update(['status' => 'pending']);
+
         return response()->json(['message' => 'Payment rejected']);
     }
 }

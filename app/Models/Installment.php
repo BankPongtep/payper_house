@@ -33,4 +33,14 @@ class Installment extends Model
     {
         return $this->hasOne(Receipt::class)->latest();
     }
+
+    public function paymentProofs()
+    {
+        return $this->hasMany(PaymentProof::class);
+    }
+
+    public function latestPaymentProof()
+    {
+        return $this->hasOne(PaymentProof::class)->latestOfMany();
+    }
 }

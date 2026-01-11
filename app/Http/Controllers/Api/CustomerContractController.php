@@ -54,7 +54,7 @@ class CustomerContractController extends Controller
                 'owner:id,name,phone,email,payment_qr_code,bank_name,bank_account_number,bank_account_name',
                 'installments' => function ($q) {
                     $q->orderBy('due_date', 'asc')
-                        ->with('receipt');
+                        ->with(['receipt', 'latestPaymentProof']);
                 }
             ])
             ->first();

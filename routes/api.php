@@ -28,22 +28,30 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/settings', [\App\Http\Controllers\Api\SettingController::class, 'update']);
     });
 
-    Route::apiResource('assets', \App\Http\Controllers\Api\AssetController::class);
-    Route::post('assets/{asset}/images/{image}/main', [\App\Http\Controllers\Api\AssetController::class, 'setMainImage']);
-    Route::delete('assets/{asset}/images/{image}', [\App\Http\Controllers\Api\AssetController::class, 'deleteImage']);
+    // Owner Only Routes
+    Route::middleware(['role:owner'])->group(function () {
+        Route::apiResource('assets', \App\Http\Controllers\Api\AssetController::class);
+        Route::post('assets/{asset}/images/{image}/main', [\App\Http\Controllers\Api\AssetController::class, 'setMainImage']);
+        Route::delete('assets/{asset}/images/{image}', [\App\Http\Controllers\Api\AssetController::class, 'deleteImage']);
 
-    Route::post('/contracts/preview', [\App\Http\Controllers\Api\ContractController::class, 'preview']);
-    Route::apiResource('contracts', \App\Http\Controllers\Api\ContractController::class);
+        Route::post('/contracts/preview', [\App\Http\Controllers\Api\ContractController::class, 'preview']);
+        Route::apiResource('contracts', \App\Http\Controllers\Api\ContractController::class);
 
-    Route::apiResource('customers', \App\Http\Controllers\Api\CustomerController::class);
-    Route::get('/dashboard/owner-stats', [\App\Http\Controllers\Api\DashboardController::class, 'ownerStats']);
-    Route::post('/payments', [\App\Http\Controllers\Api\PaymentController::class, 'store']);
+        Route::apiResource('customers', \App\Http\Controllers\Api\CustomerController::class);
+        Route::get('/dashboard/owner-stats', [\App\Http\Controllers\Api\DashboardController::class, 'ownerStats']);
+        Route::post('/payments', [\App\Http\Controllers\Api\PaymentController::class, 'store']);
 
-    // Owner Settings
-    Route::get('/owner/settings', [\App\Http\Controllers\Api\OwnerSettingController::class, 'index']);
-    Route::put('/owner/settings', [\App\Http\Controllers\Api\OwnerSettingController::class, 'update']);
-    Route::post('/owner/qrcode', [\App\Http\Controllers\Api\OwnerSettingController::class, 'uploadQrCode']);
-    Route::delete('/owner/qrcode', [\App\Http\Controllers\Api\OwnerSettingController::class, 'deleteQrCode']);
+        // Owner Settings
+        Route::get('/owner/settings', [\App\Http\Controllers\Api\OwnerSettingController::class, 'index']);
+        Route::put('/owner/settings', [\App\Http\Controllers\Api\OwnerSettingController::class, 'update']);
+        Route::post('/owner/qrcode', [\App\Http\Controllers\Api\OwnerSettingController::class, 'uploadQrCode']);
+        Route::delete('/owner/qrcode', [\App\Http\Controllers\Api\OwnerSettingController::class, 'deleteQrCode']);
+
+        // Payment Proof APIs - Owner
+        Route::get('/owner/payments', [\App\Http\Controllers\Api\PaymentProofController::class, 'ownerIndex']);
+        Route::put('/owner/payments/{id}/approve', [\App\Http\Controllers\Api\PaymentProofController::class, 'approve']);
+        Route::put('/owner/payments/{id}/reject', [\App\Http\Controllers\Api\PaymentProofController::class, 'reject']);
+    });
 
     // Customer Contract APIs
     Route::get('/customer/contracts', [\App\Http\Controllers\Api\CustomerContractController::class, 'index']);
@@ -56,11 +64,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Payment Proof APIs - Customer
     Route::get('/customer/payments', [\App\Http\Controllers\Api\PaymentProofController::class, 'customerIndex']);
     Route::post('/customer/payments', [\App\Http\Controllers\Api\PaymentProofController::class, 'store']);
-
-    // Payment Proof APIs - Owner
-    Route::get('/owner/payments', [\App\Http\Controllers\Api\PaymentProofController::class, 'ownerIndex']);
-    Route::put('/owner/payments/{id}/approve', [\App\Http\Controllers\Api\PaymentProofController::class, 'approve']);
-    Route::put('/owner/payments/{id}/reject', [\App\Http\Controllers\Api\PaymentProofController::class, 'reject']);
 
     // Thai Address API
     Route::get('/thai-address/provinces', [\App\Http\Controllers\Api\ThaiAddressController::class, 'getProvinces']);
