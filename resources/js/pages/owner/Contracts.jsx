@@ -39,9 +39,7 @@ export default function Contracts() {
     };
 
     const getTypeBadge = (type) => {
-        return type === 'hire_purchase'
-            ? t('contract.type_hire_purchase')
-            : t('contract.type_installment');
+        return t(`contract.type_${type}`) || type;
     };
 
     return (

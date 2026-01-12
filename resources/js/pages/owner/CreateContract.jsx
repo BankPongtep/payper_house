@@ -76,7 +76,7 @@ export default function CreateContract() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!preview) {
+        if (!preview && formData.contract_type !== 'rental') {
             Swal.fire({
                 icon: 'warning',
                 title: t('common.error'),
@@ -111,7 +111,7 @@ export default function CreateContract() {
         <div className="pb-10">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">{t('contract.create_title')}</h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className={`grid grid-cols-1 ${formData.contract_type === 'rental' ? '' : 'lg:grid-cols-2'} gap-8`}>
                 {/* Form Section */}
                 <div className="bg-white p-6 rounded-lg shadow">
                     <form onSubmit={handleSubmit}>
@@ -157,6 +157,17 @@ export default function CreateContract() {
                                     />
                                     {t('contract.type_hire_purchase')}
                                 </label>
+                                <label className="inline-flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="contract_type"
+                                        value="rental"
+                                        checked={formData.contract_type === 'rental'}
+                                        onChange={handleChange}
+                                        className="mr-2"
+                                    />
+                                    {t('contract.type_rental')}
+                                </label>
                             </div>
                         </div>
 
@@ -167,7 +178,9 @@ export default function CreateContract() {
 
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                                <label className="block text-sm font-medium mb-1">{t('contract.total_price')}</label>
+                                <label className="block text-sm font-medium mb-1">
+                                    {formData.contract_type === 'rental' ? t('contract.monthly_rent_label') : t('contract.total_price')}
+                                </label>
                                 <input
                                     name="total_price"
                                     type="text"
@@ -183,7 +196,9 @@ export default function CreateContract() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">{t('contract.down_payment')}</label>
+                                <label className="block text-sm font-medium mb-1">
+                                    {formData.contract_type === 'rental' ? t('contract.security_deposit') : t('contract.down_payment')}
+                                </label>
                                 <input
                                     name="down_payment"
                                     type="text"
@@ -201,25 +216,29 @@ export default function CreateContract() {
                         </div>
 
                         <div className="grid grid-cols-3 gap-4 mb-4">
+                            {formData.contract_type !== 'rental' && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">{t('contract.interest_rate')}</label>
+                                    <input
+                                        name="interest_rate"
+                                        type="text"
+                                        step="0.01"
+                                        className="w-full border rounded p-2 text-right"
+                                        value={formData.interest_rate}
+                                        onChange={e => {
+                                            const rawValue = e.target.value.replace(/,/g, '');
+                                            if (rawValue === '' || /^\d*\.?\d*$/.test(rawValue)) {
+                                                setFormData({ ...formData, interest_rate: rawValue });
+                                            }
+                                        }}
+                                        required
+                                    />
+                                </div>
+                            )}
                             <div>
-                                <label className="block text-sm font-medium mb-1">{t('contract.interest_rate')}</label>
-                                <input
-                                    name="interest_rate"
-                                    type="text"
-                                    step="0.01"
-                                    className="w-full border rounded p-2 text-right"
-                                    value={formData.interest_rate}
-                                    onChange={e => {
-                                        const rawValue = e.target.value.replace(/,/g, '');
-                                        if (rawValue === '' || /^\d*\.?\d*$/.test(rawValue)) {
-                                            setFormData({ ...formData, interest_rate: rawValue });
-                                        }
-                                    }}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">{t('contract.installments')}</label>
+                                <label className="block text-sm font-medium mb-1">
+                                    {formData.contract_type === 'rental' ? t('contract.contract_duration') : t('contract.installments')}
+                                </label>
                                 <input name="installments_count" type="number" className="w-full border rounded p-2 text-right" value={formData.installments_count} onChange={handleChange} required />
                             </div>
                             <div>
@@ -249,10 +268,17 @@ export default function CreateContract() {
                         )}
 
                         <div className="flex justify-between mt-6">
-                            <button type="button" onClick={handleCalculate} className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700">
-                                {t('contract.calculate')}
-                            </button>
-                            <button type="submit" disabled={!preview} className={`px-6 py-2 rounded text-white ${preview ? 'bg-blue-600 hover:shadow' : 'bg-blue-300 cursor-not-allowed'}`}>
+                            {formData.contract_type !== 'rental' && (
+                                <button type="button" onClick={handleCalculate} className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700">
+                                    {t('contract.calculate')}
+                                </button>
+                            )}
+                            <button
+                                type="submit"
+                                disabled={!preview && formData.contract_type !== 'rental'}
+                                className={`px-6 py-2 rounded text-white ${(preview || formData.contract_type === 'rental') ? 'bg-blue-600 hover:shadow' : 'bg-blue-300 cursor-not-allowed'
+                                    } ${formData.contract_type === 'rental' ? 'w-full' : ''}`}
+                            >
                                 {t('contract.create')}
                             </button>
                         </div>
@@ -260,54 +286,56 @@ export default function CreateContract() {
                 </div>
 
                 {/* Preview Section */}
-                <div className="bg-white p-6 rounded-lg shadow">
-                    <h3 className="text-xl font-bold mb-4 border-b pb-2">{t('contract.schedule_preview')}</h3>
-                    {preview ? (
-                        <div>
-                            <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                                <div><span className="text-gray-500">{t('contract.principal')}:</span> ฿{Number(preview.principal).toLocaleString()}</div>
-                                <div><span className="text-gray-500">{t('contract.total_interest')}:</span> ฿{Number(preview.interest_total).toLocaleString()}</div>
-                                <div className="font-bold text-blue-600"><span className="text-gray-500 font-normal">{t('contract.monthly_pay')}:</span> ฿{Number(preview.installment_amount).toLocaleString()}</div>
-                                <div className="font-bold"><span className="text-gray-500 font-normal">{t('contract.total_payable')}:</span> ฿{Number(preview.total_payable).toLocaleString()}</div>
-                            </div>
-
-                            {preview.balloon_payment > 0 && (
-                                <div className="mb-4 p-4 bg-amber-50 border border-amber-300 rounded-lg">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-amber-700 font-medium">🏦 {t('contract.balloon_payment')}</span>
-                                        <span className="text-xl font-bold text-amber-700">฿{Number(preview.balloon_payment).toLocaleString()}</span>
-                                    </div>
-                                    <p className="text-xs text-amber-600 mt-1">{t('contract.balloon_desc')}</p>
+                {formData.contract_type !== 'rental' && (
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h3 className="text-xl font-bold mb-4 border-b pb-2">{t('contract.schedule_preview')}</h3>
+                        {preview ? (
+                            <div>
+                                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                                    <div><span className="text-gray-500">{t('contract.principal')}:</span> ฿{Number(preview.principal).toLocaleString()}</div>
+                                    <div><span className="text-gray-500">{t('contract.total_interest')}:</span> ฿{Number(preview.interest_total).toLocaleString()}</div>
+                                    <div className="font-bold text-blue-600"><span className="text-gray-500 font-normal">{t('contract.monthly_pay')}:</span> ฿{Number(preview.installment_amount).toLocaleString()}</div>
+                                    <div className="font-bold"><span className="text-gray-500 font-normal">{t('contract.total_payable')}:</span> ฿{Number(preview.total_payable).toLocaleString()}</div>
                                 </div>
-                            )}
 
-                            <div className="overflow-y-auto max-h-[400px]">
-                                <table className="min-w-full text-sm">
-                                    <thead className="bg-gray-50 sticky top-0">
-                                        <tr>
-                                            <th className="px-4 py-2 text-left">#</th>
-                                            <th className="px-4 py-2 text-left">{t('contract.due_date')}</th>
-                                            <th className="px-4 py-2 text-right">{t('contract.amount')}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y">
-                                        {preview.schedule.map((inst, idx) => (
-                                            <tr key={idx}>
-                                                <td className="px-4 py-2">{inst.installment_number}</td>
-                                                <td className="px-4 py-2">{inst.due_date}</td>
-                                                <td className="px-4 py-2 text-right">฿{Number(inst.amount_due).toLocaleString()}</td>
+                                {preview.balloon_payment > 0 && (
+                                    <div className="mb-4 p-4 bg-amber-50 border border-amber-300 rounded-lg">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-amber-700 font-medium">🏦 {t('contract.balloon_payment')}</span>
+                                            <span className="text-xl font-bold text-amber-700">฿{Number(preview.balloon_payment).toLocaleString()}</span>
+                                        </div>
+                                        <p className="text-xs text-amber-600 mt-1">{t('contract.balloon_desc')}</p>
+                                    </div>
+                                )}
+
+                                <div className="overflow-y-auto max-h-[400px]">
+                                    <table className="min-w-full text-sm">
+                                        <thead className="bg-gray-50 sticky top-0">
+                                            <tr>
+                                                <th className="px-4 py-2 text-left">#</th>
+                                                <th className="px-4 py-2 text-left">{t('contract.due_date')}</th>
+                                                <th className="px-4 py-2 text-right">{t('contract.amount')}</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {preview.schedule.map((inst, idx) => (
+                                                <tr key={idx}>
+                                                    <td className="px-4 py-2">{inst.installment_number}</td>
+                                                    <td className="px-4 py-2">{inst.due_date}</td>
+                                                    <td className="px-4 py-2 text-right">฿{Number(inst.amount_due).toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="text-gray-400 text-center py-10">
-                            {t('contract.preview_hint')}
-                        </div>
-                    )}
-                </div>
+                        ) : (
+                            <div className="text-gray-400 text-center py-10">
+                                {t('contract.preview_hint')}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

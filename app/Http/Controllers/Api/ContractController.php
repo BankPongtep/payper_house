@@ -52,7 +52,7 @@ class ContractController extends Controller
             'interest_rate' => 'required|numeric',
             'installments_count' => 'required|integer|min:1',
             'start_date' => 'required|date',
-            'contract_type' => 'nullable|in:installment,hire_purchase',
+            'contract_type' => 'nullable|in:installment,hire_purchase,rental',
             'balloon_percent' => 'nullable|numeric|min:0|max:100', // % of principal for balloon
         ]);
 
@@ -71,23 +71,36 @@ class ContractController extends Controller
 
     private function calculateSchedule($total, $down, $rate, $months, $startDate, $contractType = 'installment', $balloonPercent = 0)
     {
-        $principal = $total - $down;
+        if ($contractType === 'rental') {
+            // For Rental:
+            // $total = Monthly Rent (Input)
+            // $down = Security Deposit (Separate, not deducted)
+            $installmentAmount = $total;
+            $principal = $total * $months; // Total contract value
+            $financedPrincipal = $principal;
+            $interestTotal = 0;
+            $balloonPayment = 0;
+            $totalWithInterest = $principal;
+        } else {
+            // For Installment / Hire Purchase
+            $principal = $total - $down;
 
-        // For hire_purchase, calculate balloon payment (ยอดกู้ธนาคาร)
-        $balloonPayment = 0;
-        $financedPrincipal = $principal;
+            // For hire_purchase, calculate balloon payment (ยอดกู้ธนาคาร)
+            $balloonPayment = 0;
+            $financedPrincipal = $principal;
 
-        if ($contractType === 'hire_purchase' && $balloonPercent > 0) {
-            $balloonPayment = $principal * ($balloonPercent / 100);
-            $financedPrincipal = $principal - $balloonPayment; // ส่วนที่ผ่อนกับเจ้าของ
+            if ($contractType === 'hire_purchase' && $balloonPercent > 0) {
+                $balloonPayment = $principal * ($balloonPercent / 100);
+                $financedPrincipal = $principal - $balloonPayment; // ส่วนที่ผ่อนกับเจ้าของ
+            }
+
+            // Simple Interest Formula: Interest = Principal * Rate * Time
+            // Rate is percentage per year
+            $interestTotal = $financedPrincipal * ($rate / 100) * ($months / 12);
+
+            $totalWithInterest = $financedPrincipal + $interestTotal;
+            $installmentAmount = ceil($totalWithInterest / $months); // Round up
         }
-
-        // Simple Interest Formula: Interest = Principal * Rate * Time
-        // Rate is percentage per year
-        $interestTotal = $financedPrincipal * ($rate / 100) * ($months / 12);
-
-        $totalWithInterest = $financedPrincipal + $interestTotal;
-        $installmentAmount = ceil($totalWithInterest / $months); // Round up
 
         $schedule = [];
         $date = Carbon::parse($startDate);
@@ -133,7 +146,7 @@ class ContractController extends Controller
             'interest_rate' => 'required|numeric',
             'installments_count' => 'required|integer',
             'start_date' => 'required|date',
-            'contract_type' => 'nullable|in:installment,hire_purchase',
+            'contract_type' => 'nullable|in:installment,hire_purchase,rental',
             'balloon_percent' => 'nullable|numeric',
         ]);
 

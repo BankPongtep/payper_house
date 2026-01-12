@@ -76,7 +76,7 @@ export default function ContractDetail() {
 
     const tabs = [
         { id: 'info', label: t('contract.tab_info'), icon: FileText },
-        { id: 'installments', label: t('contract.tab_installments'), icon: Calendar },
+        ...(contract?.contract_type !== 'rental' ? [{ id: 'installments', label: t('contract.tab_installments'), icon: Calendar }] : []),
         { id: 'payments', label: t('contract.tab_payments'), icon: CreditCard },
     ];
 
@@ -92,7 +92,9 @@ export default function ContractDetail() {
                     <ArrowLeft size={24} />
                 </Link>
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">{contract.contract_number}</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                        {contract.contract_number} {contract.asset?.name ? <span className="text-lg font-normal text-gray-600">({contract.asset.name})</span> : ''}
+                    </h2>
                     <p className="text-gray-500">{contract.customer?.name}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-3">
@@ -110,8 +112,12 @@ export default function ContractDetail() {
             {/* Progress Bar */}
             <div className="bg-white p-4 rounded-lg shadow mb-6">
                 <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">{t('contract.payment_progress')}</span>
-                    <span className="font-medium">{paidCount} / {totalCount} {t('contract.installments_paid')}</span>
+                    <span className="text-gray-600">
+                        {contract.contract_type === 'rental' ? t('contract.rental_progress') : t('contract.payment_progress')}
+                    </span>
+                    <span className="font-medium">
+                        {paidCount} / {totalCount} {contract.contract_type === 'rental' ? t('contract.months') : t('contract.installments_paid')}
+                    </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
@@ -162,6 +168,12 @@ export default function ContractDetail() {
                                         <span className="text-gray-500">{t('contract.end_date')}</span>
                                         <p className="font-medium">{contract.end_date || '-'}</p>
                                     </div>
+                                    {contract.contract_type === 'rental' && (
+                                        <div>
+                                            <span className="text-gray-500">{t('contract.contract_duration')}</span>
+                                            <p className="font-medium">{contract.installments_count} {t('contract.months')}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -169,25 +181,29 @@ export default function ContractDetail() {
                                 <h3 className="font-semibold text-gray-800 border-b pb-2">{t('contract.financial_info')}</h3>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                        <span className="text-gray-500">{t('contract.total_price')}</span>
+                                        <span className="text-gray-500">{contract.contract_type === 'rental' ? t('contract.monthly_rent_label') : t('contract.total_price')}</span>
                                         <p className="font-medium text-lg">฿{Number(contract.total_price).toLocaleString()}</p>
                                     </div>
                                     <div>
-                                        <span className="text-gray-500">{t('contract.down_payment')}</span>
+                                        <span className="text-gray-500">{contract.contract_type === 'rental' ? t('contract.security_deposit') : t('contract.down_payment')}</span>
                                         <p className="font-medium">฿{Number(contract.down_payment).toLocaleString()}</p>
                                     </div>
-                                    <div>
-                                        <span className="text-gray-500">{t('contract.principal')}</span>
-                                        <p className="font-medium">฿{Number(contract.principal_amount).toLocaleString()}</p>
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-500">{t('contract.interest_rate')}</span>
-                                        <p className="font-medium">{contract.interest_rate}%</p>
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-500">{t('contract.monthly_pay')}</span>
-                                        <p className="font-medium text-blue-600">฿{Number(contract.installment_amount).toLocaleString()}</p>
-                                    </div>
+                                    {contract.contract_type !== 'rental' && (
+                                        <>
+                                            <div>
+                                                <span className="text-gray-500">{t('contract.principal')}</span>
+                                                <p className="font-medium">฿{Number(contract.principal_amount).toLocaleString()}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500">{t('contract.interest_rate')}</span>
+                                                <p className="font-medium">{contract.interest_rate}%</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500">{t('contract.monthly_pay')}</span>
+                                                <p className="font-medium text-blue-600">฿{Number(contract.installment_amount).toLocaleString()}</p>
+                                            </div>
+                                        </>
+                                    )}
                                     {contract.balloon_payment > 0 && (
                                         <div>
                                             <span className="text-gray-500">{t('contract.balloon_payment')}</span>
