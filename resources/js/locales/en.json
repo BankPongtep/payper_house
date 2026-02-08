@@ -236,7 +236,14 @@
         "cancel_reason_placeholder": "Please specify the reason for cancellation...",
         "confirm_cancel": "Confirm Cancellation",
         "cancel_success": "Contract cancelled successfully",
-        "status_cancelled": "Cancelled"
+        "status_cancelled": "Cancelled",
+        "renew_contract": "Renew Contract",
+        "renew_title": "Contract Renewal",
+        "renew_description": "Create a new contract based on the remaining balance (Balloon Payment) of this contract.",
+        "renewal_amount": "Renewal Amount (Principal)",
+        "renew_success": "Contract renewed successfully",
+        "status_closed": "Closed",
+        "status_renewed": "Renewed"
     },
     "settings": {
         "title": "Settings",

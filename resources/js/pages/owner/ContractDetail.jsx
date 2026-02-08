@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, Printer, XCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, Printer, XCircle, RotateCw } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from '../../api';
 import SignedPDFModal from '../../components/SignedPDFModal';
+import RenewalModal from '../../components/RenewalModal';
 
 export default function ContractDetail() {
     const { t } = useTranslation();
@@ -19,6 +20,7 @@ export default function ContractDetail() {
 
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
+    const [showRenewalModal, setShowRenewalModal] = useState(false);
 
     useEffect(() => {
         fetchContract();
@@ -179,6 +181,15 @@ export default function ContractDetail() {
                     <p className="text-gray-500">{contract.customer?.name}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-3">
+                    {contract.status !== 'cancelled' && contract.status !== 'closed' && (
+                        <button
+                            onClick={() => setShowRenewalModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 border border-green-200 rounded-lg hover:bg-green-100 transition"
+                        >
+                            <RotateCw size={18} />
+                            <span>{t('contract.renew_contract')}</span>
+                        </button>
+                    )}
                     {contract.status === 'active' && (
                         <button
                             onClick={handleCancelClick}
@@ -445,6 +456,15 @@ export default function ContractDetail() {
                     </div>
                 </div>
             )}
+            {/* Renewal Modal */}
+            <RenewalModal
+                isOpen={showRenewalModal}
+                onClose={() => setShowRenewalModal(false)}
+                contract={contract}
+                onSuccess={() => {
+                    fetchContract();
+                }}
+            />
         </div>
     );
 }

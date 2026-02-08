@@ -365,4 +365,85 @@ class ContractController extends Controller
             return response()->json(['message' => 'Failed to cancel contract: ' . $e->getMessage()], 500);
         }
     }
+
+    public function renew(Request $request, Contract $contract)
+    {
+        if ($request->user()->id !== $contract->owner_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'total_price' => 'required|numeric', // This should be the balloon amount
+            'interest_rate' => 'required|numeric',
+            'installments_count' => 'required|integer|min:1',
+            'start_date' => 'required|date',
+            'contract_type' => 'nullable|in:installment,hire_purchase',
+            'balloon_percent' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        $contractType = $request->contract_type ?? 'installment';
+        $balloonPercent = $request->balloon_percent ?? 0;
+
+        // Calculate Schedule for New Contract
+        $calc = $this->calculateSchedule(
+            $request->total_price,
+            0, // No down payment for renewal essentially
+            $request->interest_rate,
+            $request->installments_count,
+            $request->start_date,
+            $contractType,
+            $balloonPercent
+        );
+
+        DB::beginTransaction();
+        try {
+            // 1. Close Old Contract
+            $contract->update(['status' => 'closed']);
+
+            // 2. Create New Contract
+            $newContract = $request->user()->contracts()->create([
+                'customer_id' => $contract->customer_id,
+                'asset_id' => $contract->asset_id,
+                'contract_number' => 'RN-' . $contract->contract_number . '-' . Carbon::now()->timestamp, // Generate new number
+                'type' => $contract->type,
+                'contract_type' => $contractType,
+                'total_price' => $request->total_price,
+                'down_payment' => 0, // No down payment for renewal essentially
+                'principal_amount' => $calc['principal'],
+                'interest_rate' => $request->interest_rate,
+                'installments_count' => $request->installments_count,
+                'installment_amount' => $calc['installment_amount'],
+                'balloon_payment' => $calc['balloon_payment'],
+                'start_date' => $request->start_date,
+                'end_date' => $calc['end_date'],
+                'original_end_date' => $calc['end_date'],
+                'parent_contract_id' => $contract->id,
+                'status' => 'active',
+                // signature_path is intentionally left null (new contract needs signing)
+            ]);
+
+            // 3. Create Installments for New Contract
+            foreach ($calc['schedule'] as $inst) {
+                $newContract->installments()->create([
+                    'due_date' => $inst['due_date'],
+                    'amount' => $inst['amount_due'],
+                    'status' => 'pending',
+                ]);
+            }
+
+            // Asset status remains 'leased' (or similar), no change needed if already leased.
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Contract renewed successfully',
+                'new_contract_id' => $newContract->id,
+                'new_contract' => $newContract
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to renew contract: ' . $e->getMessage()], 500);
+        }
+    }
 }
