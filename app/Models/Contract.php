@@ -26,6 +26,7 @@ class Contract extends Model
         'original_end_date',
         'parent_contract_id',
         'status',
+        'signature_path',
     ];
 
     public function owner()

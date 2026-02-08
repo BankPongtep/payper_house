@@ -1,15 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, Printer } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, Printer, XCircle } from 'lucide-react';
+import Swal from 'sweetalert2';
 import api from '../../api';
+import SignedPDFModal from '../../components/SignedPDFModal';
 
 export default function ContractDetail() {
     const { t } = useTranslation();
     const { id } = useParams();
+    const navigate = useNavigate();
     const [contract, setContract] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('info');
+
+    const [showSignModal, setShowSignModal] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState(null);
+
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
 
     useEffect(() => {
         fetchContract();
@@ -23,6 +32,77 @@ export default function ContractDetail() {
             console.error('Failed to fetch contract:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchPdfUrl = async () => {
+        try {
+            const response = await api.get(`/contracts/${id}/pdf-url`);
+            setPdfUrl(response.data.url);
+        } catch (err) {
+            console.error('Failed to get PDF URL:', err);
+        }
+    };
+
+    const handleSignClick = () => {
+        fetchPdfUrl();
+        setShowSignModal(true);
+    };
+
+    const handleSignSave = async (signatureData) => {
+        try {
+            await api.post(`/contracts/${id}/sign`, { signature: signatureData });
+            fetchPdfUrl();
+            fetchContract();
+        } catch (err) {
+            console.error('Failed to save signature:', err);
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: 'Failed to save signature'
+            });
+        }
+    };
+
+    const handleCancelClick = () => {
+        setShowCancelModal(true);
+    };
+
+    const handleCancelSubmit = async (e) => {
+        e.preventDefault();
+        if (!cancelReason.trim()) return;
+
+        const result = await Swal.fire({
+            title: t('contract.confirm_cancel'),
+            text: t('contract.cancel_description'),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel')
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            await api.post(`/contracts/${id}/cancel`, { reason: cancelReason });
+            setShowCancelModal(false);
+            fetchContract(); // Refresh data to show cancelled status
+            Swal.fire({
+                icon: 'success',
+                title: t('common.success'),
+                text: t('contract.cancel_success'),
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            console.error('Failed to cancel contract:', err);
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: err.response?.data?.message || 'Failed to cancel contract'
+            });
         }
     };
 
@@ -44,6 +124,7 @@ export default function ContractDetail() {
             partial: { color: 'bg-blue-100 text-blue-800', icon: CreditCard },
             active: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
             completed: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
+            cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle },
         };
         const config = statusConfig[status] || statusConfig.pending;
         const Icon = config.icon;
@@ -85,7 +166,7 @@ export default function ContractDetail() {
     const progress = totalCount > 0 ? (paidCount / totalCount) * 100 : 0;
 
     return (
-        <div className="pb-10">
+        <div className="pb-10 relative">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
                 <Link to="/owner/contracts" className="p-2 hover:bg-gray-100 rounded-full transition">
@@ -98,9 +179,25 @@ export default function ContractDetail() {
                     <p className="text-gray-500">{contract.customer?.name}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-3">
+                    {contract.status === 'active' && (
+                        <button
+                            onClick={handleCancelClick}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition"
+                        >
+                            <XCircle size={18} />
+                            {t('contract.cancel')}
+                        </button>
+                    )}
+                    <button
+                        onClick={handleSignClick}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition"
+                    >
+                        <FileText size={18} />
+                        ลงนาม (Sign)
+                    </button>
                     <button
                         onClick={handlePrint}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition"
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border transition"
                     >
                         <Printer size={18} />
                         {t('contract.print')}
@@ -290,6 +387,64 @@ export default function ContractDetail() {
                     )}
                 </div>
             </div>
+
+            {/* Signed PDF Modal */}
+            {showSignModal && (
+                <SignedPDFModal
+                    pdfUrl={pdfUrl}
+                    onSaveSignature={handleSignSave}
+                    onClose={() => setShowSignModal(false)}
+                />
+            )}
+
+            {/* Cancel Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="p-6 border-b">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-bold text-gray-800">{t('contract.cancel_title')}</h3>
+                                <button onClick={() => setShowCancelModal(false)} className="text-gray-400 hover:text-gray-600">
+                                    <XCircle size={24} />
+                                </button>
+                            </div>
+                        </div>
+                        <form onSubmit={handleCancelSubmit}>
+                            <div className="p-6">
+                                <p className="text-gray-600 mb-4">{t('contract.cancel_description')}</p>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                                        {t('contract.cancel_reason')} <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        rows="4"
+                                        value={cancelReason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        placeholder={t('contract.cancel_reason_placeholder')}
+                                        required
+                                    ></textarea>
+                                </div>
+                            </div>
+                            <div className="p-6 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCancelModal(false)}
+                                    className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-100 transition"
+                                >
+                                    {t('common.close')}
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                                >
+                                    {t('contract.confirm_cancel')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

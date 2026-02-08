@@ -36,6 +36,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::post('/contracts/preview', [\App\Http\Controllers\Api\ContractController::class, 'preview']);
         Route::apiResource('contracts', \App\Http\Controllers\Api\ContractController::class);
+        Route::get('contracts/{contract}/pdf-url', [\App\Http\Controllers\Api\ContractController::class, 'getPdfUrl']);
+        Route::post('contracts/{contract}/sign', [\App\Http\Controllers\Api\ContractController::class, 'sign']);
+        Route::post('contracts/{contract}/cancel', [\App\Http\Controllers\Api\ContractController::class, 'cancel']);
 
         Route::apiResource('customers', \App\Http\Controllers\Api\CustomerController::class);
         Route::get('/dashboard/owner-stats', [\App\Http\Controllers\Api\DashboardController::class, 'ownerStats']);
@@ -70,4 +73,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/thai-address/amphures/{province}', [\App\Http\Controllers\Api\ThaiAddressController::class, 'getAmphures']);
     Route::get('/thai-address/tambons/{amphure}', [\App\Http\Controllers\Api\ThaiAddressController::class, 'getTambons']);
 });
+
+// Signed Route for PDF Streaming (No Auth Header needed, relies on signature)
+Route::get('contracts/{contract}/stream-pdf', [\App\Http\Controllers\Api\ContractController::class, 'streamPdf'])
+    ->name('contracts.pdf.stream')
+    ->middleware('signed');
 

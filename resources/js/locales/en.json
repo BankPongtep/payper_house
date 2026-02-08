@@ -228,7 +228,15 @@
         "paid_amount": "Paid",
         "no_installments": "No installments",
         "receipt": "Receipt",
-        "no_payments": "No payment history"
+        "no_payments": "No payment history",
+        "cancel": "Cancel Contract",
+        "cancel_title": "Confirm Cancellation",
+        "cancel_description": "Cancelling this contract will terminate its status and the associated asset will be marked as 'Available' for new contracts. This action cannot be undone.",
+        "cancel_reason": "Cancellation Reason",
+        "cancel_reason_placeholder": "Please specify the reason for cancellation...",
+        "confirm_cancel": "Confirm Cancellation",
+        "cancel_success": "Contract cancelled successfully",
+        "status_cancelled": "Cancelled"
     },
     "settings": {
         "title": "Settings",

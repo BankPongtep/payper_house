@@ -26,6 +26,6 @@ ssh $TARGET_USER@$TARGET_HOST "chmod -R 775 $TARGET_DIR/storage $TARGET_DIR/boot
 
 # Run migrations
 echo "Running migrations..."
-ssh $TARGET_USER@$TARGET_HOST "cd $TARGET_DIR && php artisan migrate --force"
+ssh $TARGET_USER@$TARGET_HOST "cd $TARGET_DIR && composer install --no-dev --optimize-autoloader && php artisan migrate --force"
 
 echo "Deploy finished successfully."

@@ -7,7 +7,11 @@ use App\Models\Contract;
 use App\Models\Installment;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade as PDF;
 
 class ContractController extends Controller
 {
@@ -237,5 +241,128 @@ class ContractController extends Controller
 
         $contract->delete();
         return response()->json(['message' => 'Contract deleted']);
+    }
+    public function getPdfUrl(Request $request, Contract $contract)
+    {
+        if ($request->user()->id !== $contract->owner_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Generate a temporary signed URL valid for 5 minutes
+        $url = URL::temporarySignedRoute(
+            'contracts.pdf.stream',
+            now()->addMinutes(5),
+            ['contract' => $contract->id]
+        );
+
+        return response()->json(['url' => $url]);
+    }
+
+    public function streamPdf(Request $request, Contract $contract)
+    {
+        // Valid Signature Check is handled by middleware 'signed' in routes
+        if (!$request->hasValidSignature()) {
+            abort(403, 'Invalid or expired signature');
+        }
+
+        $contract->load('customer', 'asset', 'installments', 'owner');
+
+        // Ensure locale is Thai for dates
+        \Carbon\Carbon::setLocale('th');
+
+        $pdf = PDF::loadView('pdfs.contract', compact('contract'));
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('contract-' . $contract->contract_number . '.pdf');
+    }
+
+    public function sign(Request $request, Contract $contract)
+    {
+        if ($request->user()->id !== $contract->owner_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'signature' => 'required|string',
+        ]);
+
+        try {
+            $image = $request->signature;
+            // Handle data URI scheme
+            if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
+                $image = substr($image, strpos($image, ',') + 1);
+                $type = strtolower($type[1]); // jpg, png, gif
+
+                if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
+                    throw new \Exception('invalid image type');
+                }
+                $image = str_replace(' ', '+', $image);
+                $image = base64_decode($image);
+
+                if ($image === false) {
+                    throw new \Exception('base64_decode failed');
+                }
+            } else {
+                throw new \Exception('did not match data URI with image data');
+            }
+
+            $imageName = 'signatures/' . $contract->id . '_' . Str::random(10) . '.' . $type;
+
+            Storage::disk('public')->put($imageName, $image);
+
+            // Delete old signature if exists
+            if ($contract->signature_path) {
+                Storage::disk('public')->delete($contract->signature_path);
+            }
+
+            $contract->update(['signature_path' => $imageName]);
+
+            return response()->json(['message' => 'Signature saved successfully', 'path' => $imageName]);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to save signature: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function cancel(Request $request, Contract $contract)
+    {
+        if ($request->user()->id !== $contract->owner_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        if ($contract->status === 'cancelled') {
+            return response()->json(['message' => 'Contract is already cancelled'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Log cancellation
+            DB::table('contract_cancellations')->insert([
+                'contract_id' => $contract->id,
+                'cancelled_by' => $request->user()->id,
+                'reason' => $request->reason,
+                'cancelled_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 2. Update Contract status
+            $contract->update(['status' => 'cancelled']);
+
+            // 3. Update Asset status to available
+            $contract->asset()->update(['status' => 'available']);
+
+            DB::commit();
+
+            return response()->json(['message' => 'Contract cancelled successfully']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to cancel contract: ' . $e->getMessage()], 500);
+        }
     }
 }
