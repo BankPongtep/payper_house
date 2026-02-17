@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, QrCode, Building2, Upload, Send } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from '../../api';
+import { QRCodeCanvas } from 'qrcode.react';
+import generatePayload from 'promptpay-qr';
 
 export default function CustomerContractDetail() {
     const { t } = useTranslation();
@@ -255,7 +257,26 @@ export default function CustomerContractDetail() {
                     <div className="bg-white rounded-xl shadow-sm border p-6">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">{t('customer.scan_to_pay')}</h3>
 
-                        {contract.owner?.payment_qr_code ? (
+                        {contract.owner?.bank_name === 'PromptPay' && selectedInstallment ? (
+                            <div className="flex flex-col items-center">
+                                <div className="bg-white p-4 rounded-lg border shadow-sm mb-4">
+                                    <QRCodeCanvas
+                                        value={generatePayload(contract.owner.bank_account_number, { amount: Number(contract.installments.find(i => i.id == selectedInstallment)?.amount || 0) })}
+                                        size={200}
+                                        level="L"
+                                        includeMargin={true}
+                                    />
+                                </div>
+                                <div className="text-center bg-gray-50 p-4 rounded-lg w-full max-w-sm">
+                                    <p className="text-sm text-gray-500">พร้อมเพย์ (PromptPay)</p>
+                                    <p className="font-semibold text-gray-800 text-lg">{contract.owner.bank_account_number}</p>
+                                    <p className="text-sm text-gray-500 mt-2">ยอดชำระ (Amount)</p>
+                                    <p className="font-bold text-blue-600 text-xl">฿{Number(contract.installments.find(i => i.id == selectedInstallment)?.amount || 0).toLocaleString()}</p>
+                                    <p className="text-sm text-gray-500 mt-2">ชื่อบัญชี (Account Name)</p>
+                                    <p className="font-semibold text-gray-800">{contract.owner.bank_account_name || '-'}</p>
+                                </div>
+                            </div>
+                        ) : contract.owner?.payment_qr_code ? (
                             <div className="flex flex-col items-center">
                                 <img
                                     src={`${window.location.origin}/storage/${contract.owner.payment_qr_code}`}

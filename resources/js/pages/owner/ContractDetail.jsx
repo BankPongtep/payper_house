@@ -51,11 +51,21 @@ export default function ContractDetail() {
         setShowSignModal(true);
     };
 
-    const handleSignSave = async (signatureData) => {
+    const handleSignSave = async (signatureData, type) => {
         try {
-            await api.post(`/contracts/${id}/sign`, { signature: signatureData });
+            await api.post(`/contracts/${id}/sign`, {
+                signature: signatureData,
+                type: type
+            });
             fetchPdfUrl();
             fetchContract();
+            Swal.fire({
+                icon: 'success',
+                title: t('common.success'),
+                text: 'Signature saved successfully',
+                timer: 1500,
+                showConfirmButton: false
+            });
         } catch (err) {
             console.error('Failed to save signature:', err);
             Swal.fire({
@@ -199,20 +209,32 @@ export default function ContractDetail() {
                             {t('contract.cancel')}
                         </button>
                     )}
-                    <button
-                        onClick={handleSignClick}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition"
-                    >
-                        <FileText size={18} />
-                        ลงนาม (Sign)
-                    </button>
-                    <button
-                        onClick={handlePrint}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border transition"
-                    >
-                        <Printer size={18} />
-                        {t('contract.print')}
-                    </button>
+                    {contract.status === 'active' ? (
+                        <button
+                            onClick={handleSignClick}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition"
+                        >
+                            <Printer size={18} />
+                            พิมพ์สัญญา (Print Contract)
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                onClick={handleSignClick}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition"
+                            >
+                                <FileText size={18} />
+                                ลงนาม (Sign)
+                            </button>
+                            <button
+                                onClick={handlePrint}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border transition"
+                            >
+                                <Printer size={18} />
+                                {t('contract.print')}
+                            </button>
+                        </>
+                    )}
                     {getStatusBadge(contract.status)}
                 </div>
             </div>
@@ -405,6 +427,10 @@ export default function ContractDetail() {
                     pdfUrl={pdfUrl}
                     onSaveSignature={handleSignSave}
                     onClose={() => setShowSignModal(false)}
+                    signatures={{
+                        owner: !!contract.owner_signature_path,
+                        customer: !!contract.customer_signature_path
+                    }}
                 />
             )}
 

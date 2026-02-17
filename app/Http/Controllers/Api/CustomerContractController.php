@@ -22,7 +22,8 @@ class CustomerContractController extends Controller
         }
 
         $contracts = Contract::where('customer_id', $customer->id)
-            ->with(['asset:id,name', 'owner:id,name,phone,email,payment_qr_code,bank_name,bank_account_number,bank_account_name'])
+            ->where('status', '!=', 'pending_signature')
+            ->with(['asset:id,name', 'owner:id,name,phone,email,payment_qr_code,bank_name,bank_account_number,bank_account_name,promptpay_type'])
             ->withCount([
                 'installments',
                 'installments as paid_installments_count' => function ($q) {
@@ -51,7 +52,7 @@ class CustomerContractController extends Controller
             ->where('customer_id', $customer->id)
             ->with([
                 'asset:id,name,description',
-                'owner:id,name,phone,email,payment_qr_code,bank_name,bank_account_number,bank_account_name',
+                'owner:id,name,phone,email,payment_qr_code,bank_name,bank_account_number,bank_account_name,promptpay_type',
                 'installments' => function ($q) {
                     $q->orderBy('due_date', 'asc')
                         ->with(['receipt', 'paymentProofs']);
@@ -80,7 +81,7 @@ class CustomerContractController extends Controller
 
         $contract = Contract::where('id', $id)
             ->where('customer_id', $customer->id)
-            ->with('owner:id,payment_qr_code,bank_name,bank_account_number,bank_account_name')
+            ->with('owner:id,payment_qr_code,bank_name,bank_account_number,bank_account_name,promptpay_type')
             ->first();
 
         if (!$contract) {
@@ -94,6 +95,7 @@ class CustomerContractController extends Controller
             'bank_name' => $owner->bank_name,
             'bank_account_number' => $owner->bank_account_number,
             'bank_account_name' => $owner->bank_account_name,
+            'promptpay_type' => $owner->promptpay_type,
         ]);
     }
 }

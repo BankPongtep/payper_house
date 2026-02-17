@@ -15,6 +15,7 @@ export default function OwnerSettings() {
         bank_name: '',
         bank_account_number: '',
         bank_account_name: '',
+        promptpay_type: 'phone', // default to phone
     });
 
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -118,6 +119,7 @@ export default function OwnerSettings() {
                 bank_name: settings.bank_name,
                 bank_account_number: settings.bank_account_number,
                 bank_account_name: settings.bank_account_name,
+                promptpay_type: settings.bank_name === 'PromptPay' ? settings.promptpay_type : null,
             });
             Swal.fire({
                 icon: 'success',
@@ -255,16 +257,47 @@ export default function OwnerSettings() {
                             </select>
                         </div>
 
+                        {settings.bank_name === 'PromptPay' && (
+                            <div className="flex gap-4 mb-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="promptpay_type"
+                                        value="phone"
+                                        checked={settings.promptpay_type !== 'id_card'} // Default or explicit phone
+                                        onChange={handleChange}
+                                        className="text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-700">เบอร์โทรศัพท์ (Phone)</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="promptpay_type"
+                                        value="id_card"
+                                        checked={settings.promptpay_type === 'id_card'}
+                                        onChange={handleChange}
+                                        className="text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-700">เลขบัตรประชาชน (ID Card)</span>
+                                </label>
+                            </div>
+                        )}
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                {t('settings.account_number')}
+                                {settings.bank_name === 'PromptPay'
+                                    ? (settings.promptpay_type === 'id_card' ? 'เลขบัตรประชาชน (ID Card Number)' : 'เบอร์โทรศัพท์ (Phone Number)')
+                                    : t('settings.account_number')}
                             </label>
                             <input
                                 type="text"
                                 name="bank_account_number"
                                 value={settings.bank_account_number || ''}
                                 onChange={handleChange}
-                                placeholder="xxx-xxx-xxxx"
+                                placeholder={settings.bank_name === 'PromptPay'
+                                    ? (settings.promptpay_type === 'id_card' ? 'x-xxxx-xxxxx-xx-x' : '0xx-xxx-xxxx')
+                                    : 'xxx-xxx-xxxx'}
                                 className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>

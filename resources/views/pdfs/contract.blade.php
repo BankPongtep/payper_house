@@ -298,8 +298,15 @@
     <div class="signatures">
         <div class="sig-block">
             <div
-                style="margin-top: 50px; border-top: 1px solid black; padding-top: 5px; width: 80%; margin-left: auto; margin-right: auto;">
-
+                style="margin-top: 50px; border-top: 1px solid black; padding-top: 5px; width: 80%; margin-left: auto; margin-right: auto; position: relative;">
+                @if(!empty($contract->owner_signature_path) && file_exists(storage_path('app/public/' . $contract->owner_signature_path)))
+                    <div style="position: absolute; top: -70px; left: 0; right: 0; text-align: center;">
+                        <img src="{{ storage_path('app/public/' . $contract->owner_signature_path) }}"
+                            class="signature-img">
+                    </div>
+                @else
+                    <div style="height: 60px;"></div>
+                @endif
                 ( {{ $contract->owner->name ?? '............................................................' }} ) <br>
                 {{ $isRental ? 'ผู้ให้เช่า' : 'ผู้ให้เช่าซื้อ' }}
             </div>
@@ -307,9 +314,12 @@
         <div class="sig-block sig-right">
             <div
                 style="margin-top: 50px; border-top: 1px solid black; padding-top: 5px; width: 80%; margin-left: auto; margin-right: auto; position: relative;">
-                @if(!empty($contract->signature_path) && file_exists(storage_path('app/public/' . $contract->signature_path)))
+                @php
+                    $custSig = $contract->customer_signature_path ?? $contract->signature_path;
+                @endphp
+                @if(!empty($custSig) && file_exists(storage_path('app/public/' . $custSig)))
                     <div style="position: absolute; top: -70px; left: 0; right: 0; text-align: center;">
-                        <img src="{{ storage_path('app/public/' . $contract->signature_path) }}" class="signature-img">
+                        <img src="{{ storage_path('app/public/' . $custSig) }}" class="signature-img">
                     </div>
                 @else
                     <div style="height: 60px;"></div>

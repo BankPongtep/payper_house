@@ -5,6 +5,25 @@
  * @license  MIT
  */
 
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <https://feross.org>
+ * @license  MIT
+ */
+
+/*!
+ * promptpay-qr
+ * JavaScript library to generate PromptPay QR code
+ * <https://github.com/dtinth/promptpay-qr>
+ *
+ * Refs:
+ * - https://www.blognone.com/node/95133
+ * - https://www.emvco.com/emv-technologies/qrcodes/
+ *
+ * @license MIT
+ */
+
 /*! decimal.js-light v2.5.1 https://github.com/MikeMcl/decimal.js-light/LICENCE */
 
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -89,6 +108,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ */
+
+/**
+ * @license qrcode.react
+ * Copyright (c) Paul O'Shannessy
+ * SPDX-License-Identifier: ISC
  */
 
 /**

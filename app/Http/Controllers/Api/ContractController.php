@@ -185,7 +185,7 @@ class ContractController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $calc['end_date'],
                 'original_end_date' => $calc['end_date'],
-                'status' => 'active',
+                'status' => 'pending_signature',
             ]);
 
             // Create Installments
@@ -284,6 +284,7 @@ class ContractController extends Controller
 
         $request->validate([
             'signature' => 'required|string',
+            'type' => 'required|in:owner,customer',
         ]);
 
         try {
@@ -291,9 +292,9 @@ class ContractController extends Controller
             // Handle data URI scheme
             if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
                 $image = substr($image, strpos($image, ',') + 1);
-                $type = strtolower($type[1]); // jpg, png, gif
+                $ext = strtolower($type[1]); // jpg, png, gif
 
-                if (!in_array($type, ['jpg', 'jpeg', 'gif', 'png'])) {
+                if (!in_array($ext, ['jpg', 'jpeg', 'gif', 'png'])) {
                     throw new \Exception('invalid image type');
                 }
                 $image = str_replace(' ', '+', $image);
@@ -306,18 +307,40 @@ class ContractController extends Controller
                 throw new \Exception('did not match data URI with image data');
             }
 
-            $imageName = 'signatures/' . $contract->id . '_' . Str::random(10) . '.' . $type;
+            $userType = $request->type;
+            $imageName = 'signatures/' . $contract->id . '_' . $userType . '_' . Str::random(10) . '.' . $ext;
 
             Storage::disk('public')->put($imageName, $image);
 
-            // Delete old signature if exists
-            if ($contract->signature_path) {
-                Storage::disk('public')->delete($contract->signature_path);
+            // Update specific signature column
+            if ($userType === 'owner') {
+                if ($contract->owner_signature_path) {
+                    Storage::disk('public')->delete($contract->owner_signature_path);
+                }
+                $contract->owner_signature_path = $imageName;
+            } else {
+                if ($contract->customer_signature_path) {
+                    Storage::disk('public')->delete($contract->customer_signature_path);
+                }
+                $contract->customer_signature_path = $imageName;
             }
 
-            $contract->update(['signature_path' => $imageName]);
+            $contract->save();
 
-            return response()->json(['message' => 'Signature saved successfully', 'path' => $imageName]);
+            // Check if both signed - Activate and Generate PDF
+            if ($contract->owner_signature_path && $contract->customer_signature_path) {
+                $contract->status = 'active';
+
+                $contract->save();
+            }
+
+            return response()->json([
+                'message' => 'Signature saved successfully',
+                'path' => $imageName,
+                'status' => $contract->status,
+                'owner_signed' => !!$contract->owner_signature_path,
+                'customer_signed' => !!$contract->customer_signature_path
+            ]);
 
         } catch (\Exception $e) {
             return response()->json(['message' => 'Failed to save signature: ' . $e->getMessage()], 500);

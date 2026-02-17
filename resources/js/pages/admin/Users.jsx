@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
+import { User, Home, X, Save, CheckCircle } from 'lucide-react'; // Added Icons
 
 export default function Users() {
     const { t, i18n } = useTranslation();
@@ -402,313 +403,366 @@ export default function Users() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-50">
-                    <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                        <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={handleCloseModal}>
-                            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-6xl transform transition-all flex flex-col max-h-[90vh]"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Modal Header */}
+                        <div className="flex justify-between items-center px-8 py-5 border-b border-gray-100">
+                            <div className="flex items-center space-x-3">
+                                <div className="bg-blue-50 p-2 rounded-lg">
+                                    <User className="w-6 h-6 text-blue-600" />
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-800">
+                                    {modalMode === 'create' ? 'เพิ่มผู้ใช้งานใหม่' : modalMode === 'edit' ? 'แก้ไขผู้ใช้งาน' : t('common.change_password')}
+                                </h2>
+                            </div>
+                            <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
                         </div>
 
-                        {/* This element is to trick the browser into centering the modal contents. */}
-                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        {/* Modal Content - Scrollable */}
+                        <div className="overflow-y-auto p-8 custom-scrollbar">
+                            <div className="text-sm text-gray-500 mb-6">กรอกข้อมูลเพื่อสร้างบัญชีผู้ใช้ใหม่ในระบบ</div>
 
-                        <div
-                            className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full p-6"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <h2 className="text-xl font-bold mb-6 border-b pb-2">
-                                {modalMode === 'create' ? t('user.create_new') : modalMode === 'edit' ? t('user.edit_user') : t('common.change_password')}
-                            </h2>
-
-                            <form onSubmit={handleSubmit}>
+                            <form onSubmit={handleSubmit} id="userForm">
                                 {modalMode !== 'password' ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                                         {/* Left Column: Account Info */}
-                                        <div className="space-y-4">
-                                            <h3 className="text-md font-semibold text-gray-700 bg-gray-50 p-2 rounded">ข้อมูลบัญชี (Account)</h3>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.name')}</label>
-                                                <input
-                                                    type="text"
-                                                    name="name"
-                                                    value={formData.name}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    required
-                                                />
+                                        <div className="space-y-6">
+                                            <div className="flex items-center space-x-2 text-blue-800 mb-4 pb-2 border-b border-blue-50">
+                                                <User className="w-5 h-5" />
+                                                <h3 className="font-bold text-lg">ข้อมูลบัญชี (Account)</h3>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.username')}</label>
-                                                <input
-                                                    type="text"
-                                                    name="username"
-                                                    value={formData.username}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                                                    required
-                                                    disabled={modalMode === 'edit'}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.email')}</label>
-                                                <input
-                                                    type="email"
-                                                    name="email"
-                                                    value={formData.email}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.phone')}</label>
-                                                <input
-                                                    type="text"
-                                                    name="phone"
-                                                    value={formData.phone}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.id_card')}</label>
-                                                <input
-                                                    type="text"
-                                                    name="id_card_number"
-                                                    value={formData.id_card_number}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                            </div>
-                                            {modalMode === 'create' && (
+
+                                            <div className="space-y-5">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('user.role')}</label>
-                                                    <select
-                                                        name="role"
-                                                        value={formData.role}
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        {t('user.name')} <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        name="name"
+                                                        value={formData.name}
                                                         onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    >
-                                                        <option value="customer">{t('roles.customer')}</option>
-                                                        <option value="owner">{t('roles.owner')}</option>
-                                                        <option value="admin">{t('roles.admin')}</option>
-                                                    </select>
+                                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                        placeholder="เช่น สมชาย ใจดี"
+                                                        required
+                                                    />
                                                 </div>
-                                            )}
-                                            {modalMode === 'create' && (
-                                                <>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        {t('user.username')} <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        name="username"
+                                                        value={formData.username}
+                                                        onChange={handleChange}
+                                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
+                                                        placeholder="username"
+                                                        required
+                                                        disabled={modalMode === 'edit'}
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        {t('user.email')} <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <div className="relative">
                                                         <input
-                                                            type="password"
-                                                            name="password"
-                                                            value={formData.password}
+                                                            type="email"
+                                                            name="email"
+                                                            value={formData.email}
                                                             onChange={handleChange}
-                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors ${formData.email && formData.email.includes('@') ? 'border-green-500 pr-10' : 'border-gray-300'}`}
+                                                            placeholder="somchai@example.com"
                                                             required
                                                         />
+                                                        {formData.email && formData.email.includes('@') && (
+                                                            <CheckCircle className="w-5 h-5 text-green-500 absolute right-3 top-1/2 transform -translate-y-1/2" />
+                                                        )}
                                                     </div>
+                                                    {formData.email && formData.email.includes('@') && (
+                                                        <p className="mt-1 text-xs text-green-600">อีเมลนี้สามารถใช้งานได้</p>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        {t('user.phone')}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        name="phone"
+                                                        value={formData.phone}
+                                                        onChange={handleChange}
+                                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                        placeholder="08x-xxx-xxxx"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        {t('user.id_card')}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        name="id_card_number"
+                                                        value={formData.id_card_number}
+                                                        onChange={handleChange}
+                                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                        placeholder="x-xxxx-xxxxx-xx-x"
+                                                    />
+                                                </div>
+
+                                                {modalMode === 'create' && (
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
-                                                        <input
-                                                            type="password"
-                                                            name="password_confirmation"
-                                                            value={formData.password_confirmation}
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                            ระดับผู้ใช้ <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <select
+                                                            name="role"
+                                                            value={formData.role}
                                                             onChange={handleChange}
-                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                            required
-                                                        />
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors bg-white"
+                                                        >
+                                                            <option value="customer">roles.customer</option>
+                                                            <option value="owner">roles.owner</option>
+                                                            <option value="admin">roles.admin</option>
+                                                        </select>
                                                     </div>
-                                                </>
-                                            )}
+                                                )}
+
+                                                {modalMode === 'create' && (
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                {t('common.password')} <span className="text-red-500">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="password"
+                                                                name="password"
+                                                                value={formData.password}
+                                                                onChange={handleChange}
+                                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                {t('common.confirm_password')} <span className="text-red-500">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="password"
+                                                                name="password_confirmation"
+                                                                value={formData.password_confirmation}
+                                                                onChange={handleChange}
+                                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                                required
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Right Column: Address Info */}
-                                        <div className="space-y-4">
-                                            <h3 className="text-md font-semibold text-gray-700 bg-gray-50 p-2 rounded">ข้อมูลที่อยู่ (Address)</h3>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.house_no')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_house_no"
-                                                        value={formData.address_house_no}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder={t('address.house_no')}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.village')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_village"
-                                                        value={formData.address_village}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder={t('address.village')}
-                                                    />
-                                                </div>
+                                        <div className="space-y-6">
+                                            <div className="flex items-center space-x-2 text-blue-800 mb-4 pb-2 border-b border-blue-50">
+                                                <Home className="w-5 h-5" />
+                                                <h3 className="font-bold text-lg">ข้อมูลที่อยู่ (Address)</h3>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.floor')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_floor"
-                                                        value={formData.address_floor}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder={t('address.floor')}
-                                                    />
+                                            <div className="space-y-4">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.house_no')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_house_no"
+                                                            value={formData.address_house_no}
+                                                            onChange={handleChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                            placeholder="บ้านเลขที่"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.village')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_village"
+                                                            value={formData.address_village}
+                                                            onChange={handleChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                            placeholder="หมู่บ้าน"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.floor')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_floor"
+                                                            value={formData.address_floor}
+                                                            onChange={handleChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                            placeholder="ชั้น"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.moo')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_moo"
+                                                            value={formData.address_moo}
+                                                            onChange={handleChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                            placeholder="หมู่"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.soi')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_soi"
+                                                            value={formData.address_soi}
+                                                            onChange={handleChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                            placeholder="ซอย"
+                                                        />
+                                                    </div>
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.moo')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_moo"
-                                                        value={formData.address_moo}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder={t('address.moo')}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.soi')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_soi"
-                                                        value={formData.address_soi}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder={t('address.soi')}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.road')}</label>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.road')}</label>
                                                     <input
                                                         type="text"
                                                         name="address_road"
                                                         value={formData.address_road}
                                                         onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        placeholder={t('address.road')}
+                                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                        placeholder="ถนน"
                                                     />
                                                 </div>
-                                            </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.province')}</label>
-                                                    <select
-                                                        name="address_province"
-                                                        value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
-                                                        onChange={handleProvinceChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    >
-                                                        <option value="">{t('address.select_province')}</option>
-                                                        {provinces.map(p => (
-                                                            <option key={p.id} value={p.id}>{getName(p)}</option>
-                                                        ))}
-                                                    </select>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.province')}</label>
+                                                        <select
+                                                            name="address_province"
+                                                            value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
+                                                            onChange={handleProvinceChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors bg-white"
+                                                        >
+                                                            <option value="">เลือกจังหวัด</option>
+                                                            {provinces.map(p => (
+                                                                <option key={p.id} value={p.id}>{getName(p)}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">อำเภอ/เขต</label>
+                                                        <select
+                                                            name="address_district"
+                                                            value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
+                                                            onChange={handleAmphureChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors bg-white"
+                                                            disabled={!formData.address_province}
+                                                        >
+                                                            <option value="">เลือกอำเภอ/เขต</option>
+                                                            {amphures.map(a => (
+                                                                <option key={a.id} value={a.id}>{getName(a)}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.district')}</label>
-                                                    <select
-                                                        name="address_district"
-                                                        value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
-                                                        onChange={handleAmphureChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        disabled={!formData.address_province}
-                                                    >
-                                                        <option value="">{t('address.select_district')}</option>
-                                                        {amphures.map(a => (
-                                                            <option key={a.id} value={a.id}>{getName(a)}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.sub_district')}</label>
-                                                    <select
-                                                        name="address_sub_district"
-                                                        value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
-                                                        onChange={handleTambonChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        disabled={!formData.address_district}
-                                                    >
-                                                        <option value="">{t('address.select_sub_district')}</option>
-                                                        {tambons.map(t => (
-                                                            <option key={t.id} value={t.id}>{getName(t)}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.postal_code')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_postal_code"
-                                                        value={formData.address_postal_code}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                                                        placeholder={t('address.postal_code')}
-                                                        readOnly
-                                                    />
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">ตำบล/แขวง</label>
+                                                        <select
+                                                            name="address_sub_district"
+                                                            value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
+                                                            onChange={handleTambonChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors bg-white"
+                                                            disabled={!formData.address_district}
+                                                        >
+                                                            <option value="">เลือกตำบล/แขวง</option>
+                                                            {tambons.map(t => (
+                                                                <option key={t.id} value={t.id}>{getName(t)}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.postal_code')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_postal_code"
+                                                            value={formData.address_postal_code}
+                                                            onChange={handleChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors bg-gray-50"
+                                                            placeholder={t('address.postal_code')}
+                                                            readOnly
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
                                     // Password Change Mode
-                                    <div className="max-w-md mx-auto">
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
+                                    <div className="max-w-md mx-auto py-8">
+                                        <div className="mb-6">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.password')}</label>
                                             <input
                                                 type="password"
                                                 name="password"
                                                 value={formData.password}
                                                 onChange={handleChange}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
                                                 required
                                             />
                                         </div>
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
+                                        <div className="mb-6">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.confirm_password')}</label>
                                             <input
                                                 type="password"
                                                 name="password_confirmation"
                                                 value={formData.password_confirmation}
                                                 onChange={handleChange}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
                                                 required
                                             />
                                         </div>
                                     </div>
                                 )}
-
-                                <div className="flex justify-end space-x-3 mt-8 pt-4 border-t">
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseModal}
-                                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                                    >
-                                        {t('common.save')}
-                                    </button>
-                                </div>
                             </form>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="px-8 py-5 border-t border-gray-100 flex justify-end space-x-3 bg-gray-50 rounded-b-2xl">
+                            <button
+                                type="button"
+                                onClick={handleCloseModal}
+                                className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+                            >
+                                {t('common.cancel')}
+                            </button>
+                            <button
+                                type="submit"
+                                form="userForm"
+                                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm flex items-center focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                                <Save className="w-5 h-5 mr-2" />
+                                {t('common.save')}
+                            </button>
                         </div>
                     </div>
                 </div>

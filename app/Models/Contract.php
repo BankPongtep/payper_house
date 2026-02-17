@@ -27,6 +27,8 @@ class Contract extends Model
         'parent_contract_id',
         'status',
         'signature_path',
+        'owner_signature_path',
+        'customer_signature_path',
     ];
 
     public function owner()

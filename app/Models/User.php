@@ -38,6 +38,11 @@ class User extends Authenticatable
         'address_district',
         'address_province',
         'address_postal_code',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_name',
+        'promptpay_type',
+        'payment_qr_code',
     ];
 
     /**

@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class AddSignaturesToContractsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::table('contracts', function (Blueprint $table) {
+            $table->string('owner_signature_path')->nullable()->after('status');
+            $table->string('customer_signature_path')->nullable()->after('owner_signature_path');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::table('contracts', function (Blueprint $table) {
+            $table->dropColumn('owner_signature_path');
+            $table->dropColumn('customer_signature_path');
+        });
+    }
+}

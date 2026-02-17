@@ -1,0 +1,178 @@
+PHP Deprecated:  Return type of Illuminate\Container\Container::offsetExists($key) should either be compatible with ArrayAccess::offsetExists(mixed $offset): bool, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1270
+
+Deprecated: Return type of Illuminate\Container\Container::offsetExists($key) should either be compatible with ArrayAccess::offsetExists(mixed $offset): bool, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1270
+PHP Deprecated:  Return type of Illuminate\Container\Container::offsetGet($key) should either be compatible with ArrayAccess::offsetGet(mixed $offset): mixed, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1281
+
+Deprecated: Return type of Illuminate\Container\Container::offsetGet($key) should either be compatible with ArrayAccess::offsetGet(mixed $offset): mixed, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1281
+PHP Deprecated:  Return type of Illuminate\Container\Container::offsetSet($key, $value) should either be compatible with ArrayAccess::offsetSet(mixed $offset, mixed $value): void, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1293
+
+Deprecated: Return type of Illuminate\Container\Container::offsetSet($key, $value) should either be compatible with ArrayAccess::offsetSet(mixed $offset, mixed $value): void, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1293
+PHP Deprecated:  Return type of Illuminate\Container\Container::offsetUnset($key) should either be compatible with ArrayAccess::offsetUnset(mixed $offset): void, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1306
+
+Deprecated: Return type of Illuminate\Container\Container::offsetUnset($key) should either be compatible with ArrayAccess::offsetUnset(mixed $offset): void, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Container/Container.php on line 1306
+PHP Deprecated:  Return type of Illuminate\Config\Repository::offsetExists($key) should either be compatible with ArrayAccess::offsetExists(mixed $offset): bool, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Config/Repository.php on line 141
+
+Deprecated: Return type of Illuminate\Config\Repository::offsetExists($key) should either be compatible with ArrayAccess::offsetExists(mixed $offset): bool, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Config/Repository.php on line 141
+PHP Deprecated:  Return type of Illuminate\Config\Repository::offsetGet($key) should either be compatible with ArrayAccess::offsetGet(mixed $offset): mixed, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Config/Repository.php on line 152
+
+Deprecated: Return type of Illuminate\Config\Repository::offsetGet($key) should either be compatible with ArrayAccess::offsetGet(mixed $offset): mixed, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Config/Repository.php on line 152
+PHP Deprecated:  Return type of Illuminate\Config\Repository::offsetSet($key, $value) should either be compatible with ArrayAccess::offsetSet(mixed $offset, mixed $value): void, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Config/Repository.php on line 164
+
+Deprecated: Return type of Illuminate\Config\Repository::offsetSet($key, $value) should either be compatible with ArrayAccess::offsetSet(mixed $offset, mixed $value): void, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Config/Repository.php on line 164
+PHP Deprecated:  Return type of Illuminate\Config\Repository::offsetUnset($key) should either be compatible with ArrayAccess::offsetUnset(mixed $offset): void, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Config/Repository.php on line 175
+
+Deprecated: Return type of Illuminate\Config\Repository::offsetUnset($key) should either be compatible with ArrayAccess::offsetUnset(mixed $offset): void, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Config/Repository.php on line 175
+PHP Fatal error:  During inheritance of ArrayAccess: Uncaught ErrorException: Return type of Illuminate\Support\Collection::offsetExists($key) should either be compatible with ArrayAccess::offsetExists(mixed $offset): bool, or the #[\ReturnTypeWillChange] attribute should be used to temporarily suppress the notice in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Support/Collection.php:1349
+Stack trace:
+#0 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Support/Collection.php(11): Illuminate\Foundation\Bootstrap\HandleExceptions->handleError(8192, 'Return type of ...', '/Users/banksmac...', 1349)
+#1 /Users/banksmacbookair/Projects/payper_house/vendor/composer/ClassLoader.php(576): include('/Users/banksmac...')
+#2 /Users/banksmacbookair/Projects/payper_house/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}('/Users/banksmac...')
+#3 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Support/helpers.php(110): Composer\Autoload\ClassLoader->loadClass('Illuminate\\Supp...')
+#4 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php(130): collect(Array)
+#5 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php(106): Illuminate\Foundation\PackageManifest->build()
+#6 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php(89): Illuminate\Foundation\PackageManifest->getManifest()
+#7 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Foundation/PackageManifest.php(78): Illuminate\Foundation\PackageManifest->config('aliases')
+#8 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/RegisterFacades.php(26): Illuminate\Foundation\PackageManifest->aliases()
+#9 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(230): Illuminate\Foundation\Bootstrap\RegisterFacades->bootstrap(Object(Illuminate\Foundation\Application))
+#10 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(310): Illuminate\Foundation\Application->bootstrapWith(Array)
+#11 /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(127): Illuminate\Foundation\Console\Kernel->bootstrap()
+#12 /Users/banksmacbookair/Projects/payper_house/artisan(49): Illuminate\Foundation\Console\Kernel->handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+#13 {main} in /Users/banksmacbookair/Projects/payper_house/vendor/laravel/framework/src/Illuminate/Support/Collection.php on line 11
+
+In Collection.php line 11:
+                          
+  During inheritance of   
+  ArrayAccess: Uncaught   
+  ErrorException: Return  
+   type of Illuminate\Su  
+  pport\Collection::offs  
+  etExists($key) should   
+  either be compatible w  
+  ith ArrayAccess::offse  
+  tExists(mixed $offset)  
+  : bool, or the #[\Retu  
+  rnTypeWillChange] attr  
+  ibute should be used t  
+  o temporarily suppress  
+   the notice in /Users/  
+  banksmacbookair/Projec  
+  ts/payper_house/vendor  
+  /laravel/framework/src  
+  /Illuminate/Support/Co  
+  llection.php:1349       
+  Stack trace:            
+  #0 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/laravel/fra  
+  mework/src/Illuminate/  
+  Support/Collection.php  
+  (11): Illuminate\Found  
+  ation\Bootstrap\Handle  
+  Exceptions->handleErro  
+  r(8192, 'Return type o  
+  f ...', '/Users/banksm  
+  ac...', 1349)           
+  #1 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/composer/Cl  
+  assLoader.php(576): in  
+  clude('/Users/banksmac  
+  ...')                   
+  #2 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/composer/Cl  
+  assLoader.php(427): Co  
+  mposer\Autoload\{closu  
+  re}('/Users/banksmac..  
+  .')                     
+  #3 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/laravel/fra  
+  mework/src/Illuminate/  
+  Support/helpers.php(11  
+  0): Composer\Autoload\  
+  ClassLoader->loadClass  
+  ('Illuminate\\Supp...'  
+  )                       
+  #4 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/laravel/fra  
+  mework/src/Illuminate/  
+  Foundation/PackageMani  
+  fest.php(130): collect  
+  (Array)                 
+  #5 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/laravel/fra  
+  mework/src/Illuminate/  
+  Foundation/PackageMani  
+  fest.php(106): Illumin  
+  ate\Foundation\Package  
+  Manifest->build()       
+  #6 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/laravel/fra  
+  mework/src/Illuminate/  
+  Foundation/PackageMani  
+  fest.php(89): Illumina  
+  te\Foundation\PackageM  
+  anifest->getManifest()  
+  #7 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/laravel/fra  
+  mework/src/Illuminate/  
+  Foundation/PackageMani  
+  fest.php(78): Illumina  
+  te\Foundation\PackageM  
+  anifest->config('alias  
+  es')                    
+  #8 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/laravel/fra  
+  mework/src/Illuminate/  
+  Foundation/Bootstrap/R  
+  egisterFacades.php(26)  
+  : Illuminate\Foundatio  
+  n\PackageManifest->ali  
+  ases()                  
+  #9 /Users/banksmacbook  
+  air/Projects/payper_ho  
+  use/vendor/laravel/fra  
+  mework/src/Illuminate/  
+  Foundation/Application  
+  .php(230): Illuminate\  
+  Foundation\Bootstrap\R  
+  egisterFacades->bootst  
+  rap(Object(Illuminate\  
+  Foundation\Application  
+  ))                      
+  #10 /Users/banksmacboo  
+  kair/Projects/payper_h  
+  ouse/vendor/laravel/fr  
+  amework/src/Illuminate  
+  /Foundation/Console/Ke  
+  rnel.php(310): Illumin  
+  ate\Foundation\Applica  
+  tion->bootstrapWith(Ar  
+  ray)                    
+  #11 /Users/banksmacboo  
+  kair/Projects/payper_h  
+  ouse/vendor/laravel/fr  
+  amework/src/Illuminate  
+  /Foundation/Console/Ke  
+  rnel.php(127): Illumin  
+  ate\Foundation\Console  
+  \Kernel->bootstrap()    
+  #12 /Users/banksmacboo  
+  kair/Projects/payper_h  
+  ouse/artisan(49): Illu  
+  minate\Foundation\Cons  
+  ole\Kernel->handle(Obj  
+  ect(Symfony\Component\  
+  Console\Input\ArgvInpu  
+  t), Object(Symfony\Com  
+  ponent\Console\Output\  
+  ConsoleOutput))         
+  #13 {main}              
+                          
+
