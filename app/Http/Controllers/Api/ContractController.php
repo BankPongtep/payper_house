@@ -350,11 +350,15 @@ class ContractController extends Controller
 
             // Use qpdf to decompress the PDF (FPDI free parser can't handle compressed PDFs)
             $decompressedPath = tempnam(sys_get_temp_dir(), 'qpdf_');
-            $qpdfCmd = "qpdf --stream-data=uncompress " . escapeshellarg($externalPath) . " " . escapeshellarg($decompressedPath) . " 2>&1";
+            $qpdfCmd = "/usr/bin/qpdf --stream-data=uncompress " . escapeshellarg($externalPath) . " " . escapeshellarg($decompressedPath) . " 2>&1";
             exec($qpdfCmd, $output, $returnCode);
 
+            \Illuminate\Support\Facades\Log::info("QPDF Command: " . $qpdfCmd);
+            \Illuminate\Support\Facades\Log::info("QPDF Return Code: " . $returnCode);
+            \Illuminate\Support\Facades\Log::info("QPDF Output: " . implode("\n", $output));
+
             // Use decompressed file if qpdf succeeded, otherwise try original
-            $pdfToImport = ($returnCode === 0) ? $decompressedPath : $externalPath;
+            $pdfToImport = ($returnCode === 0 && file_exists($decompressedPath) && filesize($decompressedPath) > 0) ? $decompressedPath : $externalPath;
 
             try {
                 $pageCount = $pdfMerger->setSourceFile($pdfToImport);
