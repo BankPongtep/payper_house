@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import {
@@ -10,6 +10,7 @@ import { Building2, FileText, AlertCircle, TrendingUp, Users, Calendar, Plus, Ar
 
 export default function Dashboard() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
         total_assets: 0,
@@ -178,9 +179,21 @@ export default function Dashboard() {
                                         outerRadius={90}
                                         paddingAngle={5}
                                         dataKey="value"
+                                        onClick={(data) => {
+                                            const statusMap = {
+                                                [t('dashboard.paid')]: 'paid',
+                                                [t('dashboard.pending')]: 'pending',
+                                                [t('dashboard.overdue')]: 'overdue'
+                                            };
+                                            const status = statusMap[data.name];
+                                            if (status) {
+                                                navigate(`/owner/installments?status=${status}`);
+                                            }
+                                        }}
+                                        className="cursor-pointer"
                                     >
                                         {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="cursor-pointer hover:opacity-80 transition" />
                                         ))}
                                     </Pie>
                                     <Legend />

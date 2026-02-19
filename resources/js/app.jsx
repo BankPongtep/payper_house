@@ -21,6 +21,7 @@ import Receipt from './pages/Receipt';
 import CreateContract from './pages/owner/CreateContract';
 import OwnerDashboard from './pages/owner/Dashboard';
 import OwnerPayments from './pages/owner/OwnerPayments';
+import Installments from './pages/owner/Installments';
 import OwnerSettings from './pages/owner/OwnerSettings';
 import CustomerLayout from './layouts/CustomerLayout';
 import CustomerDashboard from './pages/customer/Dashboard';
@@ -54,6 +55,7 @@ function App() {
                     <Route path="contracts/create" element={<CreateContract />} />
                     <Route path="contracts/:id" element={<ContractDetail />} />
                     <Route path="payments" element={<OwnerPayments />} />
+                    <Route path="installments" element={<Installments />} />
                     <Route path="settings" element={<OwnerSettings />} />
                 </Route>
 

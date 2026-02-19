@@ -44,6 +44,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('contracts/{contract}/pdf-url', [\App\Http\Controllers\Api\ContractController::class, 'getPdfUrl']);
         Route::post('contracts/{contract}/sign', [\App\Http\Controllers\Api\ContractController::class, 'sign']);
         Route::post('contracts/{contract}/cancel', [\App\Http\Controllers\Api\ContractController::class, 'cancel']);
+        Route::post('contracts/{id}/documents', [\App\Http\Controllers\Api\ContractController::class, 'uploadDocument']);
+        Route::delete('contracts/{id}/documents/{documentId}', [\App\Http\Controllers\Api\ContractController::class, 'deleteDocument']);
 
         Route::apiResource('customers', \App\Http\Controllers\Api\CustomerController::class);
         Route::get('/dashboard/owner-stats', [\App\Http\Controllers\Api\DashboardController::class, 'ownerStats']);
@@ -61,7 +63,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/owner/payments/{id}/reject', [\App\Http\Controllers\Api\PaymentProofController::class, 'reject']);
 
         // Installments
-        Route::apiResource('installments', \App\Http\Controllers\Api\InstallmentController::class)->only(['update']);
+        Route::apiResource('installments', \App\Http\Controllers\Api\InstallmentController::class)->only(['index', 'update']);
     });
 
     // Customer Contract APIs

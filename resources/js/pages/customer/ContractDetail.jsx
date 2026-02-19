@@ -234,16 +234,24 @@ export default function CustomerContractDetail() {
                                         {getStatusBadge(isOverdue(inst.due_date, inst.status) && inst.status !== 'paid' ? 'overdue' : inst.status)}
                                     </td>
                                     <td className="px-4 py-3 text-left">
-                                        {inst.latest_payment_proof?.status === 'rejected' && inst.status !== 'paid' ? (
-                                            <div className="text-xs text-red-600">
-                                                <p className="font-semibold">{inst.latest_payment_proof.note || '-'}</p>
-                                                <p className="text-gray-500 text-[10px] mt-1">
-                                                    {formatDateTime(inst.latest_payment_proof.reviewed_at)}
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <span className="text-gray-300">-</span>
-                                        )}
+                                        <div className="flex flex-col gap-1">
+                                            {inst.fine_amount > 0 && (
+                                                <div className="text-xs text-red-600">
+                                                    <p className="font-semibold">ค่าปรับ: {Number(inst.fine_amount).toLocaleString()} บาท</p>
+                                                    {inst.fine_note && <p className="text-gray-500">{inst.fine_note}</p>}
+                                                </div>
+                                            )}
+                                            {inst.latest_payment_proof?.status === 'rejected' && inst.status !== 'paid' ? (
+                                                <div className="text-xs text-red-600">
+                                                    <p className="font-semibold">{inst.latest_payment_proof.note || '-'}</p>
+                                                    <p className="text-gray-500 text-[10px] mt-1">
+                                                        {formatDateTime(inst.latest_payment_proof.reviewed_at)}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                !inst.fine_amount && <span className="text-gray-300">-</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         {inst.receipt ? (
@@ -272,7 +280,9 @@ export default function CustomerContractDetail() {
                             <div className="flex flex-col items-center">
                                 <div className="bg-white p-4 rounded-lg border shadow-sm mb-4">
                                     <QRCodeCanvas
-                                        value={generatePayload(contract.owner.bank_account_number, { amount: Number(contract.installments.find(i => i.id == selectedInstallment)?.amount || 0) })}
+                                        value={generatePayload(contract.owner.bank_account_number, {
+                                            amount: Number(contract.installments.find(i => i.id == selectedInstallment)?.amount || 0) + Number(contract.installments.find(i => i.id == selectedInstallment)?.fine_amount || 0)
+                                        })}
                                         size={200}
                                         level="L"
                                         includeMargin={true}
@@ -282,7 +292,14 @@ export default function CustomerContractDetail() {
                                     <p className="text-sm text-gray-500">พร้อมเพย์ (PromptPay)</p>
                                     <p className="font-semibold text-gray-800 text-lg">{contract.owner.bank_account_number}</p>
                                     <p className="text-sm text-gray-500 mt-2">ยอดชำระ (Amount)</p>
-                                    <p className="font-bold text-blue-600 text-xl">฿{Number(contract.installments.find(i => i.id == selectedInstallment)?.amount || 0).toLocaleString()}</p>
+                                    <p className="font-bold text-blue-600 text-xl">
+                                        ฿{(Number(contract.installments.find(i => i.id == selectedInstallment)?.amount || 0) + Number(contract.installments.find(i => i.id == selectedInstallment)?.fine_amount || 0)).toLocaleString()}
+                                    </p>
+                                    {Number(contract.installments.find(i => i.id == selectedInstallment)?.fine_amount || 0) > 0 && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            (รวมค่าปรับ: ฿{Number(contract.installments.find(i => i.id == selectedInstallment)?.fine_amount).toLocaleString()})
+                                        </p>
+                                    )}
                                     <p className="text-sm text-gray-500 mt-2">ชื่อบัญชี (Account Name)</p>
                                     <p className="font-semibold text-gray-800">{contract.owner.bank_account_name || '-'}</p>
                                 </div>
@@ -330,11 +347,15 @@ export default function CustomerContractDetail() {
                                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="">{t('payment.choose_installment')}</option>
-                                        {pendingInstallments.map((inst, idx) => (
-                                            <option key={inst.id} value={inst.id}>
-                                                {t('payment.installment')} #{contract.installments.indexOf(inst) + 1} - {formatDate(inst.due_date)} - ฿{Number(inst.amount).toLocaleString()}
-                                            </option>
-                                        ))}
+                                        {pendingInstallments.map((inst, idx) => {
+                                            const totalAmount = Number(inst.amount || 0) + Number(inst.fine_amount || 0);
+                                            return (
+                                                <option key={inst.id} value={inst.id}>
+                                                    {t('payment.installment')} #{contract.installments.indexOf(inst) + 1} - {formatDate(inst.due_date)} - ฿{totalAmount.toLocaleString()}
+                                                    {inst.fine_amount > 0 ? ` (รวมค่าปรับ)` : ''}
+                                                </option>
+                                            );
+                                        })}
                                     </select>
                                 </div>
 

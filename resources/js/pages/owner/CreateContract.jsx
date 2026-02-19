@@ -10,6 +10,9 @@ export default function CreateContract() {
     const [customers, setCustomers] = useState([]);
     const [assets, setAssets] = useState([]);
 
+    const [mainContract, setMainContract] = useState(null);
+    const [attachments, setAttachments] = useState([]);
+
     const [formData, setFormData] = useState({
         customer_id: '',
         asset_id: '',
@@ -21,6 +24,8 @@ export default function CreateContract() {
         installments_count: '12',
         balloon_percent: '0', // % of principal for balloon
         start_date: new Date().toISOString().split('T')[0],
+        witness1_name: '',
+        witness2_name: '',
     });
 
     const [preview, setPreview] = useState(null);
@@ -40,6 +45,14 @@ export default function CreateContract() {
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setPreview(null); // Reset preview on change
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.name === 'main_contract') {
+            setMainContract(e.target.files[0]);
+        } else if (e.target.name === 'attachments') {
+            setAttachments(e.target.files);
+        }
     };
 
     const handleAssetChange = (e) => {
@@ -76,18 +89,43 @@ export default function CreateContract() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!preview && formData.contract_type !== 'rental') {
-            Swal.fire({
-                icon: 'warning',
-                title: t('common.error'),
-                text: t('contract.calculate_first')
-            });
-            return;
+        if (!preview && formData.contract_type !== 'rental' && !mainContract) {
+            // If manual PDF upload, calculation might not be needed, but strictly for system generated ones it is.
+            // For now, let's keep it required if not rental and no external PDF ? 
+            // Actually, strict check:
+            if (!preview && !mainContract && formData.contract_type !== 'rental') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: t('common.error'),
+                    text: t('contract.calculate_first')
+                });
+                return;
+            }
         }
+
+        const data = new FormData();
+        Object.keys(formData).forEach(key => {
+            data.append(key, formData[key]);
+        });
+
+        // Append calculated balloon_percent if needed, though it's in formData now
+        if (formData.contract_type !== 'hire_purchase') {
+            data.set('balloon_percent', 0);
+        }
+
+        if (mainContract) {
+            data.append('main_contract', mainContract);
+        }
+
+        if (attachments && attachments.length > 0) {
+            Array.from(attachments).forEach(file => {
+                data.append('attachments[]', file);
+            });
+        }
+
         try {
-            await api.post('/contracts', {
-                ...formData,
-                balloon_percent: formData.contract_type === 'hire_purchase' ? formData.balloon_percent : 0,
+            await api.post('/contracts', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             Swal.fire({
                 icon: 'success',
@@ -99,6 +137,7 @@ export default function CreateContract() {
                 navigate('/owner/contracts');
             });
         } catch (err) {
+            console.error(err);
             Swal.fire({
                 icon: 'error',
                 title: t('common.error'),
@@ -266,6 +305,57 @@ export default function CreateContract() {
                                 <p className="text-xs text-gray-500 mt-2">{t('contract.balloon_hint')}</p>
                             </div>
                         )}
+
+                        <div className="mb-6">
+                            <h3 className="font-semibold text-gray-800 border-b pb-2 mb-4">ข้อมูลพยาน (Witnesses)</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">พยานคนที่ 1 (Witness 1)</label>
+                                    <input name="witness1_name" className="w-full border rounded p-2" value={formData.witness1_name} onChange={handleChange} placeholder="ชื่อ-นามสกุล" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">พยานคนที่ 2 (Witness 2)</label>
+                                    <input name="witness2_name" className="w-full border rounded p-2" value={formData.witness2_name} onChange={handleChange} placeholder="ชื่อ-นามสกุล" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mb-6">
+                            <h3 className="font-semibold text-gray-800 border-b pb-2 mb-4">เอกสารสัญญา (Documents)</h3>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">
+                                    ไฟล์สัญญาหลัก (Main Contract PDF) <span className="text-red-500 text-xs">* ถ้ามีไฟล์นี้ ระบบจะใช้ไฟล์นี้แทนการสร้างอัตโนมัติ (If uploaded, this PDF will replace the generated one)</span>
+                                </label>
+                                <input
+                                    type="file"
+                                    name="main_contract"
+                                    accept="application/pdf"
+                                    onChange={handleFileChange}
+                                    className="w-full border rounded p-2"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    รองรับเฉพาะไฟล์ PDF เท่านั้น (Only PDF files are allowed). ระบบจะต่อท้ายด้วยตารางผ่อนชำระและลายเซ็นอัตโนมัติ
+                                </p>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">
+                                    เอกสารแนบอื่นๆ (Attachments)
+                                </label>
+                                <input
+                                    type="file"
+                                    name="attachments"
+                                    multiple
+                                    accept="application/pdf,image/*"
+                                    onChange={handleFileChange}
+                                    className="w-full border rounded p-2"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    สามารถเลือกได้หลายไฟล์ รองรับ PDF และรูปภาพ (Multiple files allowed: PDF, JPG, PNG)
+                                </p>
+                            </div>
+                        </div>
 
                         <div className="flex justify-between mt-6">
                             {formData.contract_type !== 'rental' && (

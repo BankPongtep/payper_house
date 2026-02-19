@@ -29,7 +29,17 @@ class Contract extends Model
         'signature_path',
         'owner_signature_path',
         'customer_signature_path',
+        'witness1_name',
+        'witness1_signature_path',
+        'witness2_name',
+        'witness2_signature_path',
+        'external_contract_path',
     ];
+
+    public function documents()
+    {
+        return $this->hasMany(ContractDocument::class);
+    }
 
     public function owner()
     {

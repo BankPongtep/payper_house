@@ -9,6 +9,34 @@ use Illuminate\Http\Request;
 class InstallmentController extends Controller
 {
     /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        $query = Installment::whereHas('contract', function ($q) use ($user) {
+            $q->where('owner_id', $user->id);
+        })->with(['contract.asset', 'contract.customer']);
+
+        if ($request->has('status')) {
+            $status = $request->status;
+            if ($status == 'overdue') {
+                $query->where('status', 'pending')
+                      ->where('due_date', '<', now()->toDateString());
+            } elseif ($status == 'paid') {
+                $query->where('status', 'paid');
+            } elseif ($status == 'pending') {
+                $query->where('status', 'pending')
+                      ->where('due_date', '>=', now()->toDateString());
+            }
+        }
+
+        $installments = $query->orderBy('due_date', 'asc')->get();
+
+        return response()->json($installments);
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Installment $installment)

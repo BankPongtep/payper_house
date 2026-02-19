@@ -133,7 +133,79 @@ export default function ContractDetail() {
         window.open(`/owner/contracts/${id}/print`, '_blank');
     };
 
-    const getStatusBadge = (status) => {
+    const handleFineClick = (installment) => {
+        setSelectedInstallment(installment);
+        setFineAmount(installment.fine_amount || '');
+        setFineNote(installment.fine_note || '');
+        setShowFineModal(true);
+    };
+
+    const handleFineSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/installments/${selectedInstallment.id}`, {
+                fine_amount: fineAmount,
+                fine_note: fineNote
+            });
+            setShowFineModal(false);
+            fetchContract();
+            Swal.fire({
+                icon: 'success',
+                title: t('common.success'),
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            console.error('Failed to update fine:', err);
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: 'Failed to update fine'
+            });
+        }
+    };
+
+    const handleActivate = async () => {
+        const result = await Swal.fire({
+            title: 'ยืนยันการเริ่มสัญญา (Activate Contract)',
+            text: 'เมื่อเริ่มสัญญาแล้ว สถานะจะเปลี่ยนเป็น Active และไม่สามารถแก้ไขได้อีก (Once activated, status becomes Active and cannot be edited)',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ยืนยัน (Confirm)',
+            cancelButtonText: 'ยกเลิก (Cancel)'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            await api.post(`/contracts/${id}/activate`);
+            fetchContract();
+            Swal.fire({
+                icon: 'success',
+                title: t('common.success'),
+                text: 'Contract activated successfully',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            console.error('Failed to activate contract:', err);
+            Swal.fire({
+                icon: 'error',
+                title: t('common.error'),
+                text: err.response?.data?.message || 'Failed to activate contract'
+            });
+        }
+    };
+
+    const getStatusBadge = (status, dueDate) => {
+        // Check for overdue if status is pending
+        let displayStatus = status;
+        if (status === 'pending' && dueDate && new Date(dueDate) < new Date()) {
+            displayStatus = 'overdue';
+        }
+
         const statusConfig = {
             pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
             pending_verification: { color: 'bg-blue-100 text-blue-800', icon: Clock },
@@ -144,12 +216,12 @@ export default function ContractDetail() {
             completed: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
             cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle },
         };
-        const config = statusConfig[status] || statusConfig.pending;
+        const config = statusConfig[displayStatus] || statusConfig.pending;
         const Icon = config.icon;
         return (
             <span className={`px-2 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full ${config.color}`}>
                 <Icon size={12} />
-                {t(`contract.status_${status}`) || status}
+                {t(`contract.status_${displayStatus}`) || displayStatus}
             </span>
         );
     };
@@ -177,6 +249,7 @@ export default function ContractDetail() {
         { id: 'info', label: t('contract.tab_info'), icon: FileText },
         ...(contract?.contract_type !== 'rental' ? [{ id: 'installments', label: t('contract.tab_installments'), icon: Calendar }] : []),
         { id: 'payments', label: t('contract.tab_payments'), icon: CreditCard },
+        { id: 'documents', label: t('contract.tab_documents') || 'เอกสาร (Documents)', icon: FileText },
     ];
 
     const paidCount = contract.installments?.filter(i => i.status === 'paid').length || 0;
@@ -197,6 +270,16 @@ export default function ContractDetail() {
                     <p className="text-gray-500">{contract.customer?.name}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-3">
+                    {contract.status === 'pending' && (
+                        <button
+                            onClick={handleActivate}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow transition"
+                        >
+                            <CheckCircle size={18} />
+                            <span>เริ่มสัญญา (Activate)</span>
+                        </button>
+                    )}
+
                     {contract.status !== 'cancelled' && contract.status !== 'closed' && (
                         <button
                             onClick={() => setShowRenewalModal(true)}
@@ -296,6 +379,18 @@ export default function ContractDetail() {
                                         <span className="text-gray-500">{t('contract.contract_type')}</span>
                                         <p className="font-medium">{t(`contract.type_${contract.contract_type}`) || contract.contract_type}</p>
                                     </div>
+                                    {contract.witness1_name && (
+                                        <div>
+                                            <span className="text-gray-500">พยาน 1 (Witness 1)</span>
+                                            <p className="font-medium">{contract.witness1_name}</p>
+                                        </div>
+                                    )}
+                                    {contract.witness2_name && (
+                                        <div>
+                                            <span className="text-gray-500">พยาน 2 (Witness 2)</span>
+                                            <p className="font-medium">{contract.witness2_name}</p>
+                                        </div>
+                                    )}
                                     <div>
                                         <span className="text-gray-500">{t('contract.start_date')}</span>
                                         <p className="font-medium">{contract.start_date}</p>
@@ -313,9 +408,11 @@ export default function ContractDetail() {
                                 </div>
                             </div>
 
+                            {/* ... (rest of info tab) ... */}
                             <div className="space-y-4">
                                 <h3 className="font-semibold text-gray-800 border-b pb-2">{t('contract.financial_info')}</h3>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
+                                    {/* ... existing financial info ... */}
                                     <div>
                                         <span className="text-gray-500">{contract.contract_type === 'rental' ? t('contract.monthly_rent_label') : t('contract.total_price')}</span>
                                         <p className="font-medium text-lg">฿{Number(contract.total_price).toLocaleString()}</p>
@@ -393,7 +490,7 @@ export default function ContractDetail() {
                                                 {inst.fine_amount > 0 ? `+฿${Number(inst.fine_amount).toLocaleString()}` : '-'}
                                                 {inst.fine_note && <div className="text-xs text-gray-500">{inst.fine_note}</div>}
                                             </td>
-                                            <td className="px-4 py-3 text-center">{getStatusBadge(inst.status)}</td>
+                                            <td className="px-4 py-3 text-center">{getStatusBadge(inst.status, inst.due_date)}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <button
                                                     onClick={() => handleFineClick(inst)}
@@ -439,6 +536,137 @@ export default function ContractDetail() {
                             )}
                         </div>
                     )}
+
+                    {/* Documents Tab */}
+                    {activeTab === 'documents' && (
+                        <div>
+                            <div className="mb-6">
+                                <h3 className="font-semibold text-gray-800 mb-4 border-b pb-2">เอกสารสัญญา (Contract Documents)</h3>
+                                {contract.documents && contract.documents.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {contract.documents.map(doc => (
+                                            <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded ${doc.type === 'main_contract' ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-600'}`}>
+                                                        <FileText size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-sm">{doc.original_name}</p>
+                                                        <span className="text-xs text-gray-500 uppercase">{doc.type.replace('_', ' ')} • {new Date(doc.created_at).toLocaleDateString()}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <a
+                                                        href={`/storage/${doc.file_path}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                                    >
+                                                        View
+                                                    </a>
+                                                    {(contract.status === 'pending' || contract.status === 'pending_signature') && (
+                                                        <button
+                                                            onClick={async () => {
+                                                                const result = await Swal.fire({
+                                                                    title: 'Are you sure?',
+                                                                    text: "You won't be able to revert this!",
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonColor: '#d33',
+                                                                    cancelButtonColor: '#3085d6',
+                                                                    confirmButtonText: 'Yes, delete it!'
+                                                                });
+
+                                                                if (result.isConfirmed) {
+                                                                    try {
+                                                                        await api.delete(`/contracts/${id}/documents/${doc.id}`);
+                                                                        fetchContract();
+                                                                        Swal.fire('Deleted!', 'Document has been deleted.', 'success');
+                                                                    } catch (err) {
+                                                                        Swal.fire('Error', 'Failed to delete document', 'error');
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="text-red-500 hover:text-red-700 p-1"
+                                                        >
+                                                            <XCircle size={18} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-500 text-sm italic">No documents uploaded.</p>
+                                )}
+                            </div>
+
+                            {(contract.status === 'pending' || contract.status === 'pending_signature') && (
+                                <div className="mt-8 border-t pt-6">
+                                    <h3 className="font-semibold text-gray-800 mb-4">อัพโหลดเอกสารเพิ่มเติม (Upload New Document)</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="border border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
+                                            <input
+                                                type="file"
+                                                accept="application/pdf"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+
+                                                    const formData = new FormData();
+                                                    formData.append('file', file);
+                                                    formData.append('type', 'main_contract');
+
+                                                    try {
+                                                        await api.post(`/contracts/${id}/documents`, formData, {
+                                                            headers: { 'Content-Type': 'multipart/form-data' }
+                                                        });
+                                                        fetchContract();
+                                                        Swal.fire({ icon: 'success', title: 'Uploaded!', timer: 1500, showConfirmButton: false });
+                                                    } catch (err) {
+                                                        Swal.fire('Error', 'Failed to upload document', 'error');
+                                                    }
+                                                }}
+                                            />
+                                            <FileText size={32} className="text-gray-400 mb-2" />
+                                            <span className="text-sm font-medium text-gray-700">Upload Main Contract (PDF)</span>
+                                            <span className="text-xs text-gray-500 mt-1">Replaces existing main contract</span>
+                                        </div>
+
+                                        <div className="border border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative">
+                                            <input
+                                                type="file"
+                                                accept="application/pdf,image/*"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+
+                                                    const formData = new FormData();
+                                                    formData.append('file', file);
+                                                    formData.append('type', 'attachment');
+
+                                                    try {
+                                                        await api.post(`/contracts/${id}/documents`, formData, {
+                                                            headers: { 'Content-Type': 'multipart/form-data' }
+                                                        });
+                                                        fetchContract();
+                                                        Swal.fire({ icon: 'success', title: 'Uploaded!', timer: 1500, showConfirmButton: false });
+                                                    } catch (err) {
+                                                        Swal.fire('Error', 'Failed to upload document', 'error');
+                                                    }
+                                                }}
+                                            />
+                                            <FileText size={32} className="text-gray-400 mb-2" />
+                                            <span className="text-sm font-medium text-gray-700">Upload Attachment</span>
+                                            <span className="text-xs text-gray-500 mt-1">PDF or Image</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -450,7 +678,9 @@ export default function ContractDetail() {
                     onClose={() => setShowSignModal(false)}
                     signatures={{
                         owner: !!contract.owner_signature_path,
-                        customer: !!contract.customer_signature_path
+                        customer: !!contract.customer_signature_path,
+                        witness1: !!contract.witness1_signature_path,
+                        witness2: !!contract.witness2_signature_path
                     }}
                 />
             )}

@@ -125,6 +125,7 @@
         $isHirePurchase = $contract->contract_type === 'hire_purchase';
     @endphp
 
+    @if(!($onlySuffix ?? false))
     <div class="header">
         <h1>
             @if($isRental) สัญญาเช่า
@@ -272,6 +273,7 @@
     </div>
 
     <div class="page-break"></div>
+    @endif
 
     <div class="section">
         <h3 style="border-bottom: 1px solid #ddd; padding-bottom: 5px;">ตารางผ่อนชำระ</h3>
@@ -296,60 +298,73 @@
     </div>
 
     <div class="signatures">
-        <div class="sig-block">
-            <div
-                style="margin-top: 50px; border-top: 1px solid black; padding-top: 5px; width: 80%; margin-left: auto; margin-right: auto; position: relative;">
-                @if(!empty($contract->owner_signature_path) && file_exists(storage_path('app/public/' . $contract->owner_signature_path)))
-                    <div style="position: absolute; top: -70px; left: 0; right: 0; text-align: center;">
-                        <img src="{{ storage_path('app/public/' . $contract->owner_signature_path) }}"
-                            class="signature-img">
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="width: 50%; border: none; padding: 10px; text-align: center; vertical-align: top;">
+                    <!-- Owner -->
+                    <div style="border: 1px solid #ccc; height: 120px; position: relative;">
+                        @if(!empty($contract->owner_signature_path) && file_exists(storage_path('app/public/' . $contract->owner_signature_path)))
+                            <img src="{{ storage_path('app/public/' . $contract->owner_signature_path) }}" 
+                                 style="width: 100%; height: 100%; object-fit: contain;">
+                        @endif
                     </div>
-                @else
-                    <div style="height: 60px;"></div>
-                @endif
-                ( {{ $contract->owner->name ?? '............................................................' }} ) <br>
-                {{ $isRental ? 'ผู้ให้เช่า' : 'ผู้ให้เช่าซื้อ' }}
-            </div>
-        </div>
-        <div class="sig-block sig-right">
-            <div
-                style="margin-top: 50px; border-top: 1px solid black; padding-top: 5px; width: 80%; margin-left: auto; margin-right: auto; position: relative;">
-                @php
-                    $custSig = $contract->customer_signature_path ?? $contract->signature_path;
-                @endphp
-                @if(!empty($custSig) && file_exists(storage_path('app/public/' . $custSig)))
-                    <div style="position: absolute; top: -70px; left: 0; right: 0; text-align: center;">
-                        <img src="{{ storage_path('app/public/' . $custSig) }}" class="signature-img">
+                    <div style="margin-top: 5px;">
+                        ( {{ $contract->owner->name ?? '............................................................' }} ) <br>
+                        {{ $isRental ? 'ผู้ให้เช่า' : 'ผู้ให้เช่าซื้อ' }}
                     </div>
-                @else
-                    <div style="height: 60px;"></div>
-                @endif
-                <div>
-                    ( {{ $contract->customer->name ?? '............................................................' }}
-                    ) <br>
-                    {{ $isRental ? 'ผู้เช่า' : 'ผู้เช่าซื้อ' }}
-                </div>
-            </div>
-        </div>
-        <div style="clear: both;"></div>
-    </div>
-
-    <div class="signatures">
-        <div class="sig-block">
-            <div
-                style="margin-top: 50px; border-top: 1px solid black; padding-top: 5px; width: 80%; margin-left: auto; margin-right: auto;">
-                ลงชื่อ ............................................................ <br>
-                พยาน
-            </div>
-        </div>
-        <div class="sig-block sig-right">
-            <div
-                style="margin-top: 50px; border-top: 1px solid black; padding-top: 5px; width: 80%; margin-left: auto; margin-right: auto;">
-                ลงชื่อ ............................................................ <br>
-                พยาน
-            </div>
-        </div>
-        <div style="clear: both;"></div>
+                </td>
+                <td style="width: 50%; border: none; padding: 10px; text-align: center; vertical-align: top;">
+                    <!-- Customer -->
+                    <div style="border: 1px solid #ccc; height: 120px; position: relative;">
+                        @php $custSig = $contract->customer_signature_path ?? $contract->signature_path; @endphp
+                        @if(!empty($custSig) && file_exists(storage_path('app/public/' . $custSig)))
+                            <img src="{{ storage_path('app/public/' . $custSig) }}" 
+                                 style="width: 100%; height: 100%; object-fit: contain;">
+                        @endif
+                    </div>
+                    <div style="margin-top: 5px;">
+                        ( {{ $contract->customer->name ?? '............................................................' }} ) <br>
+                        {{ $isRental ? 'ผู้เช่า' : 'ผู้เช่าซื้อ' }}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%; border: none; padding: 10px; text-align: center; vertical-align: top; padding-top: 30px;">
+                    <!-- Witness 1 -->
+                    @if(!empty($contract->witness1_signature_path))
+                        <div style="border: 1px solid #ccc; height: 120px; position: relative;">
+                             @if(file_exists(storage_path('app/public/' . $contract->witness1_signature_path)))
+                                <img src="{{ storage_path('app/public/' . $contract->witness1_signature_path) }}" 
+                                     style="width: 100%; height: 100%; object-fit: contain;">
+                             @endif
+                        </div>
+                    @else
+                        <div style="border-bottom: 1px dotted #000; height: 100px; margin-bottom: 10px;"></div>
+                    @endif
+                    <div style="margin-top: 5px;">
+                        ( {{ $contract->witness1_name ?? '............................................................' }} ) <br>
+                        พยาน
+                    </div>
+                </td>
+                <td style="width: 50%; border: none; padding: 10px; text-align: center; vertical-align: top; padding-top: 30px;">
+                    <!-- Witness 2 -->
+                    @if(!empty($contract->witness2_signature_path))
+                        <div style="border: 1px solid #ccc; height: 120px; position: relative;">
+                             @if(file_exists(storage_path('app/public/' . $contract->witness2_signature_path)))
+                                <img src="{{ storage_path('app/public/' . $contract->witness2_signature_path) }}" 
+                                     style="width: 100%; height: 100%; object-fit: contain;">
+                             @endif
+                        </div>
+                    @else
+                        <div style="border-bottom: 1px dotted #000; height: 100px; margin-bottom: 10px;"></div>
+                    @endif
+                    <div style="margin-top: 5px;">
+                        ( {{ $contract->witness2_name ?? '............................................................' }} ) <br>
+                        พยาน
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 

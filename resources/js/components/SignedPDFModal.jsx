@@ -40,6 +40,22 @@ export default function SignedPDFModal({ pdfUrl, onSaveSignature, onClose, signa
                             <FileText size={18} />
                             {signatures.customer ? 'เซ็นแล้ว (Customer Signed)' : 'ลงนามลูกค้า (Sign Customer)'}
                         </button>
+                        <button
+                            onClick={() => !signatures.witness1 && handleSignClick('witness1')}
+                            disabled={signatures.witness1}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow transition ${signatures.witness1 ? 'bg-green-100 text-green-700 border border-green-200 cursor-not-allowed opacity-80' : 'bg-orange-600 text-white hover:bg-orange-700'}`}
+                        >
+                            <FileText size={18} />
+                            {signatures.witness1 ? 'พยาน 1 เซ็นแล้ว' : 'ลงนามพยาน 1'}
+                        </button>
+                        <button
+                            onClick={() => !signatures.witness2 && handleSignClick('witness2')}
+                            disabled={signatures.witness2}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow transition ${signatures.witness2 ? 'bg-green-100 text-green-700 border border-green-200 cursor-not-allowed opacity-80' : 'bg-orange-600 text-white hover:bg-orange-700'}`}
+                        >
+                            <FileText size={18} />
+                            {signatures.witness2 ? 'พยาน 2 เซ็นแล้ว' : 'ลงนามพยาน 2'}
+                        </button>
                         <button onClick={onClose} className="text-gray-500 hover:text-gray-700 ml-2">
                             <X size={24} />
                         </button>
@@ -66,7 +82,13 @@ export default function SignedPDFModal({ pdfUrl, onSaveSignature, onClose, signa
                     <SignaturePad
                         onSave={handleSave}
                         onClose={() => setShowPad(false)}
-                        title={signingType === 'owner' ? 'ลงนามเจ้าของ (Owner Signature)' : 'ลงนามลูกค้า (Customer Signature)'}
+                        title={
+                            signingType === 'owner' ? 'ลงนามเจ้าของ (Owner Signature)' :
+                                signingType === 'customer' ? 'ลงนามลูกค้า (Customer Signature)' :
+                                    signingType === 'witness1' ? 'ลงนามพยาน 1 (Witness 1 Signature)' :
+                                        signingType === 'witness2' ? 'ลงนามพยาน 2 (Witness 2 Signature)' :
+                                            'ลงนาม (Signature)'
+                        }
                     />
                 )}
             </div>
