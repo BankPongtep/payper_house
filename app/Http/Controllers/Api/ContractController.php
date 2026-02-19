@@ -220,16 +220,16 @@ class ContractController extends Controller
             if ($request->hasFile('main_contract')) {
                 $file = $request->file('main_contract');
                 $path = $file->store('contracts/external', 'public');
-                
+
                 $contract->documents()->create([
                     'type' => 'main_contract',
                     'file_path' => $path,
                     'original_name' => $file->getClientOriginalName(),
                     'file_type' => 'pdf',
                 ]);
-                
+
                 // Update specific column for quick access if needed, or rely on relationship
-                 $contract->update(['external_contract_path' => $path]);
+                $contract->update(['external_contract_path' => $path]);
             }
 
             // Handle Attachments
@@ -238,7 +238,7 @@ class ContractController extends Controller
                     $mime = $file->getMimeType();
                     $isImage = strpos($mime, 'image/') !== false;
                     $fileType = $isImage ? 'image' : 'pdf';
-                    
+
                     if ($isImage) {
                         $path = $this->resizeAndSaveImage($file, 'contracts/attachments');
                     } else {
@@ -336,7 +336,7 @@ class ContractController extends Controller
 
         // Check if external PDF exists
         if ($contract->external_contract_path && Storage::disk('public')->exists($contract->external_contract_path)) {
-            
+
             // 1. Generate Suffix PDF (Schedule + Signatures)
             $pdf = PDF::loadView('pdfs.contract', ['contract' => $contract, 'onlySuffix' => true]);
             $pdf->setPaper('a4', 'portrait');
@@ -344,18 +344,18 @@ class ContractController extends Controller
 
             // 2. Merge using FPDI
             $pdfMerger = new \setasign\Fpdi\Fpdi();
-            
+
             // Import External PDF - decompress with qpdf first for FPDI compatibility
             $externalPath = Storage::disk('public')->path($contract->external_contract_path);
-            
+
             // Use qpdf to decompress the PDF (FPDI free parser can't handle compressed PDFs)
             $decompressedPath = tempnam(sys_get_temp_dir(), 'qpdf_');
             $qpdfCmd = "qpdf --stream-data=uncompress " . escapeshellarg($externalPath) . " " . escapeshellarg($decompressedPath) . " 2>&1";
             exec($qpdfCmd, $output, $returnCode);
-            
+
             // Use decompressed file if qpdf succeeded, otherwise try original
             $pdfToImport = ($returnCode === 0) ? $decompressedPath : $externalPath;
-            
+
             try {
                 $pageCount = $pdfMerger->setSourceFile($pdfToImport);
                 for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
@@ -376,16 +376,24 @@ class ContractController extends Controller
                 }
 
                 unlink($tmpFile);
-                if (file_exists($decompressedPath)) unlink($decompressedPath);
+                if (file_exists($decompressedPath))
+                    unlink($decompressedPath);
 
                 return response($pdfMerger->Output('S'), 200)
                     ->header('Content-Type', 'application/pdf')
                     ->header('Content-Disposition', 'inline; filename="contract-' . $contract->contract_number . '.pdf"');
-                    
+
             } catch (\Exception $e) {
+                // Log the error for debugging
+                \Illuminate\Support\Facades\Log::error('PDF Merge Failed: ' . $e->getMessage());
+                if (isset($output)) {
+                    \Illuminate\Support\Facades\Log::error('QPDF Output: ' . implode("\n", $output));
+                }
+
                 // Fallback: if merge fails, just generate the full PDF from Blade
-                if (file_exists($decompressedPath)) unlink($decompressedPath);
-                
+                if (file_exists($decompressedPath))
+                    unlink($decompressedPath);
+
                 $pdf = PDF::loadView('pdfs.contract', ['contract' => $contract, 'onlySuffix' => false]);
                 $pdf->setPaper('a4', 'portrait');
                 return $pdf->stream('contract-' . $contract->contract_number . '.pdf');
@@ -432,11 +440,11 @@ class ContractController extends Controller
 
             // Use Intervention Image to resize/optimize signature
             $filename = 'signatures/' . $contract->id . '_' . $request->type . '_' . Str::random(10) . '.jpg';
-            
+
             $img = Image::make($image);
             // Resize if too large (e.g. width > 600)
             if ($img->width() > 600) {
-                 $img->resize(600, null, function ($constraint) {
+                $img->resize(600, null, function ($constraint) {
                     $constraint->aspectRatio();
                     $constraint->upsize();
                 });
@@ -448,16 +456,20 @@ class ContractController extends Controller
             // Update specific signature column
             $userType = $request->type;
             if ($userType === 'owner') {
-                if ($contract->owner_signature_path) Storage::disk('public')->delete($contract->owner_signature_path);
+                if ($contract->owner_signature_path)
+                    Storage::disk('public')->delete($contract->owner_signature_path);
                 $contract->owner_signature_path = $imageName;
             } elseif ($userType === 'customer') {
-                if ($contract->customer_signature_path) Storage::disk('public')->delete($contract->customer_signature_path);
+                if ($contract->customer_signature_path)
+                    Storage::disk('public')->delete($contract->customer_signature_path);
                 $contract->customer_signature_path = $imageName;
             } elseif ($userType === 'witness1') {
-                if ($contract->witness1_signature_path) Storage::disk('public')->delete($contract->witness1_signature_path);
+                if ($contract->witness1_signature_path)
+                    Storage::disk('public')->delete($contract->witness1_signature_path);
                 $contract->witness1_signature_path = $imageName;
             } elseif ($userType === 'witness2') {
-                if ($contract->witness2_signature_path) Storage::disk('public')->delete($contract->witness2_signature_path);
+                if ($contract->witness2_signature_path)
+                    Storage::disk('public')->delete($contract->witness2_signature_path);
                 $contract->witness2_signature_path = $imageName;
             }
 
@@ -487,7 +499,7 @@ class ContractController extends Controller
         }
 
         if ($contract->status === 'active') {
-             return response()->json(['message' => 'Contract is already active'], 400);
+            return response()->json(['message' => 'Contract is already active'], 400);
         }
 
         // Optional: Enforcement logic (e.g. require owner & customer signatures)
@@ -628,12 +640,12 @@ class ContractController extends Controller
         $contract = Contract::findOrFail($id);
 
         if ($contract->status === 'active' || $contract->status === 'completed' || $contract->status === 'cancelled') {
-             // For now, allow uploads even if active, but maybe restrict main_contract replacement?
-             // User requested: "ถ้ากดยืนยันสัญญาแล้ว จะสามารถเรียกดูได้อย่างเดียวไม่สามารถเพิ่ม / ลบ ได้"
-             // "If confirmed (active?), can only view, cannot add/delete"
-             if ($contract->status !== 'pending' && $contract->status !== 'draft' && $contract->status !== 'pending_signature') {
-                 return response()->json(['message' => 'Cannot modify documents for active/completed contracts'], 403);
-             }
+            // For now, allow uploads even if active, but maybe restrict main_contract replacement?
+            // User requested: "ถ้ากดยืนยันสัญญาแล้ว จะสามารถเรียกดูได้อย่างเดียวไม่สามารถเพิ่ม / ลบ ได้"
+            // "If confirmed (active?), can only view, cannot add/delete"
+            if ($contract->status !== 'pending' && $contract->status !== 'draft' && $contract->status !== 'pending_signature') {
+                return response()->json(['message' => 'Cannot modify documents for active/completed contracts'], 403);
+            }
         }
 
         $request->validate([
@@ -648,9 +660,9 @@ class ContractController extends Controller
         // Logic says we should replace or error. Let's replace for now or just add as new version?
         // The previous logic in store() implies one main_contract. 
         if ($type === 'main_contract') {
-             // Logic to handle main contract replacement if needed, 
-             // but for simplicity, let's just upload it. 
-             // Ideally we should delete old main_contract if exists?
+            // Logic to handle main contract replacement if needed, 
+            // but for simplicity, let's just upload it. 
+            // Ideally we should delete old main_contract if exists?
         }
 
         $pathPrefix = 'contract_docs/' . $contract->id;

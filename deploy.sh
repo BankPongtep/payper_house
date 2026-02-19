@@ -24,6 +24,10 @@ rsync -avz --exclude 'vendor' \
 ssh $TARGET_USER@$TARGET_HOST "chown -R www-data:www-data $TARGET_DIR"
 ssh $TARGET_USER@$TARGET_HOST "chmod -R 775 $TARGET_DIR/storage $TARGET_DIR/bootstrap/cache"
 
+# Install System Dependencies (qpdf)
+echo "Installing system dependencies..."
+ssh $TARGET_USER@$TARGET_HOST "apt-get update && apt-get install -y qpdf"
+
 # Run migrations
 echo "Running migrations..."
 ssh $TARGET_USER@$TARGET_HOST "cd $TARGET_DIR && composer install --no-dev --optimize-autoloader && php artisan migrate --force"
