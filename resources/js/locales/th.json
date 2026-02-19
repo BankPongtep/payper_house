@@ -247,7 +247,6 @@
         "renew_description": "สร้างสัญญาฉบับใหม่โดยอ้างอิงยอดเงินคงเหลือ (Balloon Payment) จากสัญญาฉบับนี้",
         "renewal_amount": "ยอดจัดสัญญาใหม่ (เงินต้น)",
         "renew_success": "ต่อสัญญาสำเร็จ",
-        "status_closed": "ปิดสัญญาแล้ว",
         "status_renewed": "ต่อสัญญาแล้ว"
     },
     "settings": {

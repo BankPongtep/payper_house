@@ -54,10 +54,14 @@ export default function CustomerContractDetail() {
 
     const getStatusBadge = (status) => {
         const config = {
+            active: { color: 'bg-green-100 text-green-700', icon: CheckCircle },
             pending: { color: 'bg-yellow-100 text-yellow-700', icon: Clock },
             pending_verification: { color: 'bg-blue-100 text-blue-700', icon: Clock },
             paid: { color: 'bg-green-100 text-green-700', icon: CheckCircle },
             overdue: { color: 'bg-red-100 text-red-700', icon: AlertCircle },
+            cancelled: { color: 'bg-red-100 text-red-700', icon: AlertCircle },
+            closed: { color: 'bg-gray-100 text-gray-700', icon: CheckCircle },
+            terminated: { color: 'bg-red-100 text-red-700', icon: AlertCircle },
         };
         const c = config[status] || config.pending;
         const Icon = c.icon;
@@ -147,7 +151,10 @@ export default function CustomerContractDetail() {
                     <ArrowLeft size={24} />
                 </Link>
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">{contract.asset?.name}</h2>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-gray-800">{contract.asset?.name}</h2>
+                        {getStatusBadge(contract.status)}
+                    </div>
                     <p className="text-gray-500">{contract.contract_number}</p>
                 </div>
             </div>
@@ -191,7 +198,11 @@ export default function CustomerContractDetail() {
                 <button onClick={() => setActiveTab('installments')} className={`px-4 py-2 font-medium transition ${activeTab === 'installments' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
                     <Calendar size={16} className="inline mr-2" />{t('customer.installments')}
                 </button>
-                <button onClick={() => setActiveTab('payment')} className={`px-4 py-2 font-medium transition ${activeTab === 'payment' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                <button
+                    onClick={() => setActiveTab('payment')}
+                    disabled={['cancelled', 'closed', 'terminated'].includes(contract.status)}
+                    className={`px-4 py-2 font-medium transition ${activeTab === 'payment' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} ${['cancelled', 'closed', 'terminated'].includes(contract.status) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
                     <QrCode size={16} className="inline mr-2" />{t('customer.pay_now')}
                 </button>
                 <button onClick={() => setActiveTab('info')} className={`px-4 py-2 font-medium transition ${activeTab === 'info' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>

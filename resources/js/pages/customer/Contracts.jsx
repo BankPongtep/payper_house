@@ -28,6 +28,9 @@ export default function CustomerContracts() {
         const config = {
             active: { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: t('contract.status_active') },
             completed: { color: 'bg-blue-100 text-blue-700', icon: CheckCircle, label: t('contract.status_completed') },
+            cancelled: { color: 'bg-red-100 text-red-700', icon: AlertCircle, label: t('contract.status_cancelled') },
+            closed: { color: 'bg-gray-100 text-gray-700', icon: CheckCircle, label: t('contract.status_closed') },
+            terminated: { color: 'bg-red-100 text-red-700', icon: AlertCircle, label: t('contract.status_terminated') },
             pending: { color: 'bg-yellow-100 text-yellow-700', icon: Clock, label: t('contract.status_pending') },
         };
         const c = config[status] || config.pending;
