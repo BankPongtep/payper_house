@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, Printer, XCircle, RotateCw } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, Printer, XCircle, RotateCw, Edit } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from '../../api';
 import SignedPDFModal from '../../components/SignedPDFModal';
@@ -21,6 +21,12 @@ export default function ContractDetail() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [showRenewalModal, setShowRenewalModal] = useState(false);
+
+    // Fine Modal State
+    const [showFineModal, setShowFineModal] = useState(false);
+    const [selectedInstallment, setSelectedInstallment] = useState(null);
+    const [fineAmount, setFineAmount] = useState('');
+    const [fineNote, setFineNote] = useState('');
 
     useEffect(() => {
         fetchContract();
@@ -371,7 +377,9 @@ export default function ContractDetail() {
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('contract.due_date')}</th>
                                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('contract.amount')}</th>
                                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('contract.paid_amount')}</th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('contract.fine')}</th>
                                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('common.action')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -381,7 +389,20 @@ export default function ContractDetail() {
                                             <td className="px-4 py-3 text-sm">{formatDate(inst.due_date)}</td>
                                             <td className="px-4 py-3 text-sm text-right">฿{Number(inst.amount).toLocaleString()}</td>
                                             <td className="px-4 py-3 text-sm text-right">฿{Number(inst.paid_amount || 0).toLocaleString()}</td>
+                                            <td className="px-4 py-3 text-sm text-right text-red-600">
+                                                {inst.fine_amount > 0 ? `+฿${Number(inst.fine_amount).toLocaleString()}` : '-'}
+                                                {inst.fine_note && <div className="text-xs text-gray-500">{inst.fine_note}</div>}
+                                            </td>
                                             <td className="px-4 py-3 text-center">{getStatusBadge(inst.status)}</td>
+                                            <td className="px-4 py-3 text-right">
+                                                <button
+                                                    onClick={() => handleFineClick(inst)}
+                                                    className="text-gray-500 hover:text-blue-600"
+                                                    title="Edit Fine"
+                                                >
+                                                    <Edit size={16} />
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -482,6 +503,70 @@ export default function ContractDetail() {
                     </div>
                 </div>
             )}
+            {/* Cancel Modal */}
+            {/* ... */}
+
+            {/* Fine Modal */}
+            {showFineModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="p-6 border-b">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-bold text-gray-800">Edit Fine</h3>
+                                <button onClick={() => setShowFineModal(false)} className="text-gray-400 hover:text-gray-600">
+                                    <XCircle size={24} />
+                                </button>
+                            </div>
+                        </div>
+                        <form onSubmit={handleFineSubmit}>
+                            <div className="p-6">
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                                        Fine Amount (Baht)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={fineAmount}
+                                        onChange={(e) => setFineAmount(e.target.value)}
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                                        Note (Optional)
+                                    </label>
+                                    <textarea
+                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        rows="3"
+                                        value={fineNote}
+                                        onChange={(e) => setFineNote(e.target.value)}
+                                        placeholder="Reason for fine..."
+                                    ></textarea>
+                                </div>
+                            </div>
+                            <div className="p-6 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowFineModal(false)}
+                                    className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-100 transition"
+                                >
+                                    {t('common.close')}
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* Renewal Modal */}
             <RenewalModal
                 isOpen={showRenewalModal}

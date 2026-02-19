@@ -11,15 +11,23 @@ class Installment extends Model
         'due_date',
         'amount',
         'paid_amount',
+        'fine_amount',
+        'fine_note',
         'status',
     ];
 
     protected $casts = [
         'due_date' => 'date',
         'paid_at' => 'datetime',
+        'fine_amount' => 'decimal:2',
     ];
 
-    protected $appends = ['latest_payment_proof'];
+    protected $appends = ['latest_payment_proof', 'total_amount'];
+
+    public function getTotalAmountAttribute()
+    {
+        return $this->amount + ($this->fine_amount ?? 0);
+    }
 
     public function contract()
     {

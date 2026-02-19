@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Home, Building2, Users, FileText, Settings, CreditCard } from 'lucide-react';
 import api from '../api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import NotificationBell from '../components/NotificationBell';
 
 export default function OwnerLayout() {
     const { t } = useTranslation();
@@ -28,7 +29,8 @@ export default function OwnerLayout() {
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Sidebar */}
-            <div className="w-64 bg-white shadow-lg">
+            <div className="w-64 bg-white shadow-lg z-10">
+                {/* ... Sidebar content unchanged ... */}
                 <div className="p-6 border-b">
                     <div className="flex justify-between items-start">
                         <div>
@@ -39,21 +41,23 @@ export default function OwnerLayout() {
                     </div>
                 </div>
                 <nav className="mt-6">
+                    {/* ... Navigation links ... */}
                     <Link
                         to="/owner/dashboard"
                         className={`flex items-center gap-3 px-6 py-3 transition ${isActive('/owner/dashboard')
-                                ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
-                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                            ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                             }`}
                     >
                         <Home size={20} />
                         {t('menu.dashboard')}
                     </Link>
+                    {/* ... other links ... */}
                     <Link
                         to="/owner/assets"
                         className={`flex items-center gap-3 px-6 py-3 transition ${isActive('/owner/assets')
-                                ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
-                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                            ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                             }`}
                     >
                         <Building2 size={20} />
@@ -62,8 +66,8 @@ export default function OwnerLayout() {
                     <Link
                         to="/owner/customers"
                         className={`flex items-center gap-3 px-6 py-3 transition ${isActive('/owner/customers')
-                                ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
-                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                            ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                             }`}
                     >
                         <Users size={20} />
@@ -72,8 +76,8 @@ export default function OwnerLayout() {
                     <Link
                         to="/owner/contracts"
                         className={`flex items-center gap-3 px-6 py-3 transition ${isActive('/owner/contracts')
-                                ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
-                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                            ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                             }`}
                     >
                         <FileText size={20} />
@@ -82,8 +86,8 @@ export default function OwnerLayout() {
                     <Link
                         to="/owner/payments"
                         className={`flex items-center gap-3 px-6 py-3 transition ${isActive('/owner/payments')
-                                ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
-                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                            ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                             }`}
                     >
                         <CreditCard size={20} />
@@ -92,8 +96,8 @@ export default function OwnerLayout() {
                     <Link
                         to="/owner/settings"
                         className={`flex items-center gap-3 px-6 py-3 transition ${isActive('/owner/settings')
-                                ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
-                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                            ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
+                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                             }`}
                     >
                         <Settings size={20} />
@@ -101,6 +105,7 @@ export default function OwnerLayout() {
                     </Link>
                 </nav>
                 <div className="absolute bottom-0 w-64 p-6 border-t">
+                    {/* ... User profile ... */}
                     <div className="flex items-center mb-4">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
                             {user?.name?.charAt(0).toUpperCase()}
@@ -120,8 +125,11 @@ export default function OwnerLayout() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-                <main className="p-6">
+            <div className="flex-1 flex flex-col overflow-hidden bg-gray-100">
+                <header className="bg-white shadow-sm h-16 flex items-center justify-end px-6">
+                    <NotificationBell />
+                </header>
+                <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
                     <Outlet />
                 </main>
             </div>

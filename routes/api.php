@@ -12,6 +12,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/clear', [\App\Http\Controllers\Api\NotificationController::class, 'clearAll']);
+
     // Profile Management
     Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show']);
     Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
@@ -54,6 +59,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/owner/payments', [\App\Http\Controllers\Api\PaymentProofController::class, 'ownerIndex']);
         Route::put('/owner/payments/{id}/approve', [\App\Http\Controllers\Api\PaymentProofController::class, 'approve']);
         Route::put('/owner/payments/{id}/reject', [\App\Http\Controllers\Api\PaymentProofController::class, 'reject']);
+
+        // Installments
+        Route::apiResource('installments', \App\Http\Controllers\Api\InstallmentController::class)->only(['update']);
     });
 
     // Customer Contract APIs
