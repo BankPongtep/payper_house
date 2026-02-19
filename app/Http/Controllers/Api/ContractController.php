@@ -348,16 +348,22 @@ class ContractController extends Controller
             // Import External PDF - decompress with qpdf first for FPDI compatibility
             $externalPath = Storage::disk('public')->path($contract->external_contract_path);
 
-            // Use qpdf to decompress the PDF (FPDI free parser can't handle compressed PDFs)
-            $decompressedPath = tempnam(sys_get_temp_dir(), 'qpdf_');
-            $qpdfCmd = "/usr/bin/qpdf --stream-data=uncompress " . escapeshellarg($externalPath) . " " . escapeshellarg($decompressedPath) . " 2>&1";
-            exec($qpdfCmd, $output, $returnCode);
+            // Use Ghostscript to convert PDF to 1.4 compatible version for FPDI
+            $decompressedPath = tempnam(sys_get_temp_dir(), 'gs_');
 
-            \Illuminate\Support\Facades\Log::info("QPDF Command: " . $qpdfCmd);
-            \Illuminate\Support\Facades\Log::info("QPDF Return Code: " . $returnCode);
-            \Illuminate\Support\Facades\Log::info("QPDF Output: " . implode("\n", $output));
+            // Ghostscript command to re-distill PDF
+            // -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=output.pdf input.pdf
+            $gsCmd = "/usr/bin/gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=" . escapeshellarg($decompressedPath) . " " . escapeshellarg($externalPath) . " 2>&1";
+            exec($gsCmd, $output, $returnCode);
 
-            // Use decompressed file if qpdf succeeded, otherwise try original
+            \Illuminate\Support\Facades\Log::info("GS Command: " . $gsCmd);
+            \Illuminate\Support\Facades\Log::info("GS Return Code: " . $returnCode);
+            // GS usually has no output on success with -dQUIET, but good to log if error
+            if (!empty($output)) {
+                \Illuminate\Support\Facades\Log::info("GS Output: " . implode("\n", $output));
+            }
+
+            // Use processed file if GS succeeded
             $pdfToImport = ($returnCode === 0 && file_exists($decompressedPath) && filesize($decompressedPath) > 0) ? $decompressedPath : $externalPath;
 
             try {
