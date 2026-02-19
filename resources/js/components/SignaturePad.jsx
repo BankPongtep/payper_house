@@ -1,10 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { X, Check, Trash2 } from 'lucide-react';
 
-export default function SignaturePad({ onSave, onClose }) {
+export default function SignaturePad({ onSave, onClose, title, showNameInput = false }) {
     const canvasRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [hasSignature, setHasSignature] = useState(false);
+    const [name, setName] = useState('');
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -75,20 +76,37 @@ export default function SignaturePad({ onSave, onClose }) {
 
     const handleSave = () => {
         if (!hasSignature) return;
+        if (showNameInput && !name.trim()) return;
+
         const canvas = canvasRef.current;
         const dataUrl = canvas.toDataURL('image/png');
-        onSave(dataUrl);
+        onSave({ signature: dataUrl, name: name });
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col h-[80vh] md:h-[600px]">
                 <div className="flex justify-between items-center p-4 border-b">
-                    <h3 className="text-lg font-semibold text-gray-800">ลงนามสัญญา</h3>
+                    <h3 className="text-lg font-semibold text-gray-800">{title || 'ลงนามสัญญา'}</h3>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
                         <X size={24} />
                     </button>
                 </div>
+
+                {showNameInput && (
+                    <div className="p-4 bg-gray-50 border-b">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            ชื่อ-นามสกุล (พยาน) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="กรระบุชื่อ-นามสกุล ตัวบรรจง"
+                        />
+                    </div>
+                )}
 
                 <div className="flex-1 bg-gray-50 relative overflow-hidden cursor-crosshair touch-none">
                     <canvas
@@ -126,8 +144,8 @@ export default function SignaturePad({ onSave, onClose }) {
                         </button>
                         <button
                             onClick={handleSave}
-                            disabled={!hasSignature}
-                            className={`flex items-center gap-2 px-6 py-2 text-white rounded-lg shadow transition ${hasSignature ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
+                            disabled={!hasSignature || (showNameInput && !name.trim())}
+                            className={`flex items-center gap-2 px-6 py-2 text-white rounded-lg shadow transition ${hasSignature && (!showNameInput || name.trim()) ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
                                 }`}
                         >
                             <Check size={20} />

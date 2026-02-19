@@ -57,11 +57,16 @@ export default function ContractDetail() {
         setShowSignModal(true);
     };
 
-    const handleSignSave = async (signatureData, type) => {
+    const handleSignSave = async (data, type) => {
         try {
+            // Check if data is object (new format) or string (old format)
+            const signature = typeof data === 'object' ? data.signature : data;
+            const name = typeof data === 'object' ? data.name : null;
+
             await api.post(`/contracts/${id}/sign`, {
-                signature: signatureData,
-                type: type
+                signature: signature,
+                type: type,
+                witness_name: name
             });
             fetchPdfUrl();
             fetchContract();

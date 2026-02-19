@@ -82,6 +82,7 @@ export default function SignedPDFModal({ pdfUrl, onSaveSignature, onClose, signa
                     <SignaturePad
                         onSave={handleSave}
                         onClose={() => setShowPad(false)}
+                        showNameInput={['witness1', 'witness2'].includes(signingType)}
                         title={
                             signingType === 'owner' ? 'ลงนามเจ้าของ (Owner Signature)' :
                                 signingType === 'customer' ? 'ลงนามลูกค้า (Customer Signature)' :

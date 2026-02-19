@@ -426,6 +426,7 @@ class ContractController extends Controller
         $request->validate([
             'signature' => 'required|string',
             'type' => 'required|in:owner,customer,witness1,witness2',
+            'witness_name' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -449,7 +450,7 @@ class ContractController extends Controller
             }
 
             // Use Intervention Image to resize/optimize signature
-            $filename = 'signatures/' . $contract->id . '_' . $request->type . '_' . Str::random(10) . '.jpg';
+            $filename = 'signatures/' . $contract->id . '_' . $request->type . '_' . Str::random(10) . '.png';
 
             $img = Image::make($image);
             // Resize if too large (e.g. width > 600)
@@ -459,7 +460,7 @@ class ContractController extends Controller
                     $constraint->upsize();
                 });
             }
-            $encoded = $img->encode('jpg', 80);
+            $encoded = $img->encode('png');
             Storage::disk('public')->put($filename, (string) $encoded);
             $imageName = $filename;
 
@@ -477,10 +478,16 @@ class ContractController extends Controller
                 if ($contract->witness1_signature_path)
                     Storage::disk('public')->delete($contract->witness1_signature_path);
                 $contract->witness1_signature_path = $imageName;
+                if ($request->has('witness_name')) {
+                    $contract->witness1_name = $request->witness_name;
+                }
             } elseif ($userType === 'witness2') {
                 if ($contract->witness2_signature_path)
                     Storage::disk('public')->delete($contract->witness2_signature_path);
                 $contract->witness2_signature_path = $imageName;
+                if ($request->has('witness_name')) {
+                    $contract->witness2_name = $request->witness_name;
+                }
             }
 
             $contract->save();
