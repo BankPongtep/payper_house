@@ -345,34 +345,51 @@ class ContractController extends Controller
             // 2. Merge using FPDI
             $pdfMerger = new \setasign\Fpdi\Fpdi();
             
-            // Import External PDF
+            // Import External PDF - decompress with qpdf first for FPDI compatibility
             $externalPath = Storage::disk('public')->path($contract->external_contract_path);
-            $pageCount = $pdfMerger->setSourceFile($externalPath);
-            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                $templateId = $pdfMerger->importPage($pageNo);
-                $pdfMerger->AddPage();
-                $pdfMerger->useTemplate($templateId, ['adjustPageSize' => true]);
+            
+            // Use qpdf to decompress the PDF (FPDI free parser can't handle compressed PDFs)
+            $decompressedPath = tempnam(sys_get_temp_dir(), 'qpdf_');
+            $qpdfCmd = "qpdf --stream-data=uncompress " . escapeshellarg($externalPath) . " " . escapeshellarg($decompressedPath) . " 2>&1";
+            exec($qpdfCmd, $output, $returnCode);
+            
+            // Use decompressed file if qpdf succeeded, otherwise try original
+            $pdfToImport = ($returnCode === 0) ? $decompressedPath : $externalPath;
+            
+            try {
+                $pageCount = $pdfMerger->setSourceFile($pdfToImport);
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $pdfMerger->importPage($pageNo);
+                    $pdfMerger->AddPage();
+                    $pdfMerger->useTemplate($templateId, ['adjustPageSize' => true]);
+                }
+
+                // Import Suffix PDF
+                $tmpFile = tempnam(sys_get_temp_dir(), 'suffix_pdf');
+                file_put_contents($tmpFile, $suffixContent);
+
+                $pageCount = $pdfMerger->setSourceFile($tmpFile);
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $pdfMerger->importPage($pageNo);
+                    $pdfMerger->AddPage();
+                    $pdfMerger->useTemplate($templateId, ['adjustPageSize' => true]);
+                }
+
+                unlink($tmpFile);
+                if (file_exists($decompressedPath)) unlink($decompressedPath);
+
+                return response($pdfMerger->Output('S'), 200)
+                    ->header('Content-Type', 'application/pdf')
+                    ->header('Content-Disposition', 'inline; filename="contract-' . $contract->contract_number . '.pdf"');
+                    
+            } catch (\Exception $e) {
+                // Fallback: if merge fails, just generate the full PDF from Blade
+                if (file_exists($decompressedPath)) unlink($decompressedPath);
+                
+                $pdf = PDF::loadView('pdfs.contract', ['contract' => $contract, 'onlySuffix' => false]);
+                $pdf->setPaper('a4', 'portrait');
+                return $pdf->stream('contract-' . $contract->contract_number . '.pdf');
             }
-
-            // Import Suffix PDF (from memory string)
-            // FPDI requires a file or a stream wrapper for setSourceFile. 
-            // Since we have string content, we can use a temporary file or stream wrapper.
-            // Using a temp file is safer/easier in standard PHP envs.
-            $tmpFile = tempnam(sys_get_temp_dir(), 'suffix_pdf');
-            file_put_contents($tmpFile, $suffixContent);
-
-            $pageCount = $pdfMerger->setSourceFile($tmpFile);
-            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                $templateId = $pdfMerger->importPage($pageNo);
-                $pdfMerger->AddPage();
-                $pdfMerger->useTemplate($templateId, ['adjustPageSize' => true]);
-            }
-
-            unlink($tmpFile); // Clean up
-
-            return response($pdfMerger->Output('S'), 200)
-                ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="contract-' . $contract->contract_number . '.pdf"');
 
         } else {
             // Normal behavior - Full generation
