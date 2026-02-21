@@ -67,12 +67,15 @@ class DashboardController extends Controller
             ->where('status', 'paid')
             ->count();
 
-        $pendingInstallments = Installment::whereIn('contract_id', $ownerContractIds)
+        // Only count from active contracts
+        $activeContractIds = (clone $ownerContractsQuery)->where('status', 'active')->pluck('id');
+
+        $pendingInstallments = Installment::whereIn('contract_id', $activeContractIds)
             ->where('status', 'pending')
             ->where('due_date', '>=', $now->toDateString())
             ->count();
 
-        $overdueInstallments = Installment::whereIn('contract_id', $ownerContractIds)
+        $overdueInstallments = Installment::whereIn('contract_id', $activeContractIds)
             ->where('status', 'pending')
             ->where('due_date', '<', $now->toDateString())
             ->count();
