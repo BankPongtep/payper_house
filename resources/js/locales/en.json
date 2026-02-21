@@ -1,5 +1,6 @@
 {
     "common": {
+        "action": "Action",
         "loading": "Loading...",
         "save": "Save",
         "cancel": "Cancel",
@@ -27,13 +28,26 @@
         "customer": "Customer",
         "admin": "Admin",
         "name": "Name",
-        "phone": "Phone"
+        "phone": "Phone",
+        "all": "All",
+        "mark_read": "Mark as Read",
+        "no_data": "No data available",
+        "paid": "Paid"
     },
     "auth": {
         "login_title": "Login",
         "login_button": "Login",
         "login_failed": "Login failed",
-        "register_link": "Create an account"
+        "register_link": "Create an account",
+        "already_have_account": "Already have an account?",
+        "create_account": "Create Account",
+        "creating_account": "Creating account...",
+        "email_address": "Email Address",
+        "full_name": "Full Name",
+        "get_started": "Get Started",
+        "join_subtitle": "Join us today",
+        "join_title": "Create an Account",
+        "sign_in_here": "Sign in here"
     },
     "user": {
         "management": "User Management",
@@ -66,7 +80,8 @@
         "scan_to_pay": "Scan QR Code to Pay",
         "no_qr_available": "No QR Code available from owner",
         "pay_now": "Pay Now",
-        "contract_info": "Contract Info"
+        "contract_info": "Contract Info",
+        "name": "Customer Name"
     },
     "payment": {
         "title": "Payment Verification",
@@ -98,7 +113,13 @@
         "submit_proof": "Submit Proof",
         "submitted_success": "Payment proof submitted successfully",
         "submit_failed": "Failed to submit payment proof",
-        "select_installment_and_file": "Please select an installment and upload a file"
+        "select_installment_and_file": "Please select an installment and upload a file",
+        "amount": "Amount",
+        "bill_to": "Bill To",
+        "date": "Date",
+        "description": "Description",
+        "payment_details": "Payment Details",
+        "thank_you": "Thank You"
     },
     "address": {
         "house_no": "House No.",
@@ -122,7 +143,8 @@
         "contracts": "Contracts",
         "check_payments": "Verify Payments",
         "settings": "Settings",
-        "customer_portal": "Customer Portal"
+        "customer_portal": "Customer Portal",
+        "installments": "Installments"
     },
     "asset": {
         "management": "Assets Management",
@@ -146,9 +168,15 @@
             "available": "Available",
             "rented": "Rented",
             "leased": "Leased",
-            "under_maintenance": "Under Maintenance"
+            "under_maintenance": "Under Maintenance",
+            "sold": "Sold"
         },
-        "type": "Type"
+        "type": "Type",
+        "confirm_delete_image_text": "Are you sure you want to delete this image?",
+        "confirm_delete_image_title": "Delete Image",
+        "confirm_set_main_text": "Are you sure you want to set this as the main image?",
+        "confirm_set_main_title": "Set Main Image",
+        "main_image_set": "Main image set successfully"
     },
     "contract": {
         "management": "Contracts",
@@ -207,6 +235,7 @@
         "status_pending": "Pending",
         "months": "Month(s)",
         "status_pending_verification": "Pending Review",
+        "status_pending_signature": "Pending Signature",
         "management_title": "Contracts",
         "search_placeholder": "Search contracts...",
         "new_contract": "New Contract",
@@ -218,6 +247,7 @@
         "tab_info": "Info",
         "tab_installments": "Installments",
         "tab_payments": "Payments",
+        "tab_documents": "Documents",
         "contract_info": "Contract Info",
         "contract_type": "Contract Type",
         "financial_info": "Financial Info",
@@ -242,8 +272,11 @@
         "renew_description": "Create a new contract based on the remaining balance (Balloon Payment) of this contract.",
         "renewal_amount": "Renewal Amount (Principal)",
         "renew_success": "Contract renewed successfully",
-        "status_closed": "Closed",
-        "status_renewed": "Renewed"
+        "status_renewed": "Renewed",
+        "fine": "Fine",
+        "installment": "Installment",
+        "no_contracts": "No contracts found",
+        "total_payable": "Total Payable"
     },
     "settings": {
         "title": "Settings",
@@ -269,7 +302,14 @@
         "confirm_password": "Confirm New Password",
         "passwords_do_not_match": "Passwords do not match",
         "password_too_short": "Password must be at least 8 characters",
-        "profile_updated": "Profile updated successfully"
+        "profile_updated": "Profile updated successfully",
+        "account_name_hint": "e.g., John Doe",
+        "confirm_delete_qr": "Are you sure you want to delete this QR code?",
+        "delete_failed": "Delete failed",
+        "qr_upload_failed": "QR upload failed",
+        "save_failed": "Save failed",
+        "saved": "Saved successfully",
+        "select_bank": "Select Bank"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -300,5 +340,10 @@
         "next_payment": "Next Payment Due",
         "no_pending": "No pending payments",
         "recent_activity": "Recent Activity"
+    },
+    "installment": {
+        "amount": "Amount",
+        "due_date": "Due Date",
+        "paid": "Paid"
     }
 }

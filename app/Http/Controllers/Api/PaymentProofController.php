@@ -57,8 +57,16 @@ class PaymentProofController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Store image
-        $path = $request->file('image')->store('payment_proofs', 'public');
+        $img = \Intervention\Image\Facades\Image::make($request->file('image'));
+        if ($img->width() > 1200) {
+            $img->resize(1200, null, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            });
+        }
+        $encoded = $img->encode('jpg', 75);
+        $path = 'payment_proofs/' . \Illuminate\Support\Str::random(40) . '.jpg';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($path, (string) $encoded);
 
         $proof = PaymentProof::create([
             'installment_id' => $request->installment_id,
@@ -68,6 +76,14 @@ class PaymentProofController extends Controller
             'status' => 'pending',
             'submitted_at' => Carbon::now(),
         ]);
+
+        // Notify owner about uploaded payment proof
+        $owner = $installment->contract->owner ?? null;
+        if ($owner) {
+            $installment->load('contract.customer');
+            $owner->notify(new \App\Notifications\PaymentProofUploaded($installment, $customer->name));
+        }
+
 
         // Update installment status
         $installment->update(['status' => 'pending_verification']);

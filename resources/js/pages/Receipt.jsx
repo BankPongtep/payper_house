@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { Printer, Download } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function Receipt() {
     const { t } = useTranslation();
@@ -98,6 +99,16 @@ export default function Receipt() {
             {/* Footer */}
             <div className="text-center pt-8 border-t text-gray-500 text-sm">
                 <p>{t('payment.thank_you')}</p>
+                <div className="flex justify-center mt-6 mb-2">
+                    <QRCodeSVG
+                        value={window.location.href}
+                        size={100}
+                        level="L"
+                        includeMargin={true}
+                    />
+                </div>
+                <p className="text-xs text-gray-400 mt-2">สแกนเพื่อตรวจสอบใบเสร็จฉบับนี้ทางออนไลน์</p>
+                <p className="text-xs text-gray-400">Scan to verify this receipt online</p>
             </div>
 
             {/* Actions */}

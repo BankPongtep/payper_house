@@ -16,7 +16,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('app:check-payment-status')->daily();
+        $schedule->command('app:check-payment-status')
+            ->dailyAt('00:05')
+            ->appendOutputTo(storage_path('logs/cron.log'));
     }
 
     /**

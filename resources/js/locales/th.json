@@ -1,5 +1,6 @@
 {
     "common": {
+        "action": "การจัดการ",
         "loading": "กำลังโหลด...",
         "save": "บันทึก",
         "cancel": "ยกเลิก",
@@ -24,13 +25,29 @@
         "no_description": "ไม่มีคำอธิบาย",
         "admin": "ผู้ดูแลระบบ",
         "name": "ชื่อ-นามสกุล",
-        "phone": "เบอร์โทรศัพท์"
+        "phone": "เบอร์โทรศัพท์",
+        "all": "ทั้งหมด",
+        "customer": "ลูกค้า",
+        "mark_read": "ทำเครื่องหมายว่าอ่านแล้ว",
+        "month": "เดือน",
+        "no_data": "ไม่มีข้อมูล",
+        "owner": "เจ้าของ",
+        "paid": "ชำระแล้ว"
     },
     "auth": {
         "login_title": "เข้าสู่ระบบ",
         "login_button": "เข้าสู่ระบบ",
         "login_failed": "เข้าสู่ระบบไม่สำเร็จ",
-        "register_link": "สมัครสมาชิกใหม่"
+        "register_link": "สมัครสมาชิกใหม่",
+        "already_have_account": "มีบัญชีอยู่แล้ว?",
+        "create_account": "สร้างบัญชี",
+        "creating_account": "กำลังสร้างบัญชี...",
+        "email_address": "อีเมล",
+        "full_name": "ชื่อ-นามสกุล",
+        "get_started": "เริ่มต้นใช้งาน",
+        "join_subtitle": "เข้าร่วมกับเราวันนี้",
+        "join_title": "สร้างบัญชี",
+        "sign_in_here": "เข้าสู่ระบบที่นี่"
     },
     "user": {
         "management": "จัดการผู้ใช้งาน",
@@ -63,7 +80,8 @@
         "scan_to_pay": "สแกน QR Code เพื่อชำระเงิน",
         "no_qr_available": "ไม่มี QR Code จากเจ้าของ",
         "pay_now": "ชำระเงิน",
-        "contract_info": "รายละเอียดสัญญา"
+        "contract_info": "รายละเอียดสัญญา",
+        "name": "ชื่อลูกค้า"
     },
     "payment": {
         "title": "ตรวจสอบการชำระเงิน",
@@ -126,7 +144,8 @@
         "contracts": "จัดการสัญญา",
         "check_payments": "ตรวจสอบการชำระเงิน",
         "settings": "ตั้งค่า",
-        "customer_portal": "บริการลูกค้า"
+        "customer_portal": "บริการลูกค้า",
+        "installments": "ตารางผ่อนชำระ"
     },
     "asset": {
         "management": "จัดการทรัพย์สิน",
@@ -150,9 +169,15 @@
             "available": "ว่าง",
             "rented": "เช่าอยู่",
             "leased": "เช่าแล้ว",
-            "under_maintenance": "ปิดปรับปรุง"
+            "under_maintenance": "ปิดปรับปรุง",
+            "sold": "ขายแล้ว"
         },
-        "type": "ประเภท"
+        "type": "ประเภท",
+        "confirm_delete_image_text": "คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้?",
+        "confirm_delete_image_title": "ลบรูปภาพ",
+        "confirm_set_main_text": "คุณแน่ใจหรือไม่ที่จะตั้งเป็นรูปภาพหลัก?",
+        "confirm_set_main_title": "ตั้งเป็นรูปภาพหลัก",
+        "main_image_set": "ตั้งค่ารูปภาพหลักสำเร็จ"
     },
     "contract": {
         "management": "จัดการสัญญา",
@@ -212,6 +237,7 @@
         "status_pending": "รอชำระ",
         "months": "เดือน",
         "status_pending_verification": "รอตรวจสอบ",
+        "status_pending_signature": "รอลงนาม",
         "management_title": "จัดการสัญญา",
         "search_placeholder": "ค้นหาสัญญา...",
         "new_contract": "สร้างสัญญาใหม่",
@@ -223,6 +249,7 @@
         "tab_info": "ข้อมูลทั่วไป",
         "tab_installments": "ตารางผ่อนชำระ",
         "tab_payments": "ประวัติการชำระเงิน",
+        "tab_documents": "เอกสารสัญญา",
         "contract_info": "ข้อมูลสัญญา",
         "contract_type": "ประเภทสัญญา",
         "financial_info": "ข้อมูลการเงิน",
@@ -247,7 +274,10 @@
         "renew_description": "สร้างสัญญาฉบับใหม่โดยอ้างอิงยอดเงินคงเหลือ (Balloon Payment) จากสัญญาฉบับนี้",
         "renewal_amount": "ยอดจัดสัญญาใหม่ (เงินต้น)",
         "renew_success": "ต่อสัญญาสำเร็จ",
-        "status_renewed": "ต่อสัญญาแล้ว"
+        "status_renewed": "ต่อสัญญาแล้ว",
+        "fine": "ค่าปรับ",
+        "no_contracts": "ไม่มีสัญญา",
+        "total_payable": "ยอดชำระทั้งหมด"
     },
     "settings": {
         "owner_title": "ตั้งค่า",
@@ -305,6 +335,12 @@
         "contracts": "สัญญา",
         "total_debt": "ยอดหนี้คงเหลือ",
         "next_payment": "งวดถัดไปที่ต้องชำระ",
-        "no_pending": "ไม่มีรายการที่ต้องชำระเร็วๆ นี้"
+        "no_pending": "ไม่มีรายการที่ต้องชำระเร็วๆ นี้",
+        "recent_activity": "กิจกรรมล่าสุด"
+    },
+    "installment": {
+        "amount": "จำนวนเงิน",
+        "due_date": "วันครบกำหนด",
+        "paid": "ชำระแล้ว"
     }
 }

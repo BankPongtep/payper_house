@@ -65,7 +65,16 @@ class OwnerSettingController extends Controller
         }
 
         // Store new QR code
-        $path = $request->file('qr_code')->store('qr_codes', 'public');
+        $img = \Intervention\Image\Facades\Image::make($request->file('qr_code'));
+        if ($img->width() > 1200) {
+            $img->resize(1200, null, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            });
+        }
+        $encoded = $img->encode('jpg', 75);
+        $path = 'qr_codes/' . \Illuminate\Support\Str::random(40) . '.jpg';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($path, (string) $encoded);
 
         $user->update(['payment_qr_code' => $path]);
 

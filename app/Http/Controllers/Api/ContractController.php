@@ -44,6 +44,8 @@ class ContractController extends Controller
     {
         $user = $request->user();
         $search = $request->input('search');
+        $status = $request->input('status');
+        $type = $request->input('type');
 
         if ($user->role === 'owner') {
             $query = $user->contracts()->with(['customer', 'asset']);
@@ -54,6 +56,12 @@ class ContractController extends Controller
             })->with(['asset']);
         }
 
+        $query->withCount([
+            'installments as paid_installments_count' => function ($query) {
+                $query->where('status', 'paid');
+            }
+        ]);
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('contract_number', 'like', "%{$search}%")
@@ -61,6 +69,16 @@ class ContractController extends Controller
                         $cQ->where('name', 'like', "%{$search}%")
                             ->orWhere('id_card_number', 'like', "%{$search}%");
                     });
+            });
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($type) {
+            $query->where(function ($q) use ($type) {
+                $q->where('contract_type', $type)->orWhere('type', $type);
             });
         }
 

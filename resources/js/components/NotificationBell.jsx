@@ -23,10 +23,38 @@ const NotificationBell = () => {
     };
 
     useEffect(() => {
+        // Initial fetch to get all notifications
         fetchNotifications();
-        // Optional: Poll every minute
-        const interval = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(interval);
+
+        // SSE connection for real-time updates
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const url = `/api/notifications/stream?token=${encodeURIComponent(token)}`;
+        const eventSource = new EventSource(url);
+
+        eventSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                setUnreadCount(data.unread_count);
+
+                // If we have new notifications, refresh the full list
+                if (data.unread_count > 0) {
+                    fetchNotifications();
+                }
+            } catch (e) {
+                console.error('SSE parse error', e);
+            }
+        };
+
+        eventSource.onerror = () => {
+            // On SSE error, fall back to polling
+            eventSource.close();
+            const interval = setInterval(fetchNotifications, 30000);
+            return () => clearInterval(interval);
+        };
+
+        return () => eventSource.close();
     }, []);
 
     useEffect(() => {

@@ -44,6 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('contracts/{contract}/pdf-url', [\App\Http\Controllers\Api\ContractController::class, 'getPdfUrl']);
         Route::post('contracts/{contract}/sign', [\App\Http\Controllers\Api\ContractController::class, 'sign']);
         Route::post('contracts/{contract}/cancel', [\App\Http\Controllers\Api\ContractController::class, 'cancel']);
+        Route::post('contracts/{contract}/activate', [\App\Http\Controllers\Api\ContractController::class, 'activate']);
         Route::post('contracts/{id}/documents', [\App\Http\Controllers\Api\ContractController::class, 'uploadDocument']);
         Route::delete('contracts/{id}/documents/{documentId}', [\App\Http\Controllers\Api\ContractController::class, 'deleteDocument']);
 
@@ -83,6 +84,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/thai-address/amphures/{province}', [\App\Http\Controllers\Api\ThaiAddressController::class, 'getAmphures']);
     Route::get('/thai-address/tambons/{amphure}', [\App\Http\Controllers\Api\ThaiAddressController::class, 'getTambons']);
 });
+
+// Public Receipt API
+Route::get('/receipts/{id}', [\App\Http\Controllers\Api\ReceiptController::class, 'show']);
+
+// SSE Notification Stream (auth via query token, no throttle)
+Route::get('/notifications/stream', [\App\Http\Controllers\Api\NotificationController::class, 'stream']);
 
 // Signed Route for PDF Streaming (No Auth Header needed, relies on signature)
 Route::get('contracts/{contract}/stream-pdf', [\App\Http\Controllers\Api\ContractController::class, 'streamPdf'])

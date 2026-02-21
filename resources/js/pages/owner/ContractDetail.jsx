@@ -275,7 +275,7 @@ export default function ContractDetail() {
                     <p className="text-gray-500">{contract.customer?.name}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-3">
-                    {contract.status === 'pending' && (
+                    {(contract.status === 'pending' || contract.status === 'pending_signature') && (
                         <button
                             onClick={handleActivate}
                             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow transition"
@@ -285,7 +285,7 @@ export default function ContractDetail() {
                         </button>
                     )}
 
-                    {contract.status !== 'cancelled' && contract.status !== 'closed' && (
+                    {contract.status === 'active' && (
                         <button
                             onClick={() => setShowRenewalModal(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 border border-green-200 rounded-lg hover:bg-green-100 transition"
@@ -312,22 +312,13 @@ export default function ContractDetail() {
                             พิมพ์สัญญา (Print Contract)
                         </button>
                     ) : (
-                        <>
-                            <button
-                                onClick={handleSignClick}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition"
-                            >
-                                <FileText size={18} />
-                                ลงนาม (Sign)
-                            </button>
-                            <button
-                                onClick={handlePrint}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border transition"
-                            >
-                                <Printer size={18} />
-                                {t('contract.print')}
-                            </button>
-                        </>
+                        <button
+                            onClick={handleSignClick}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition"
+                        >
+                            <FileText size={18} />
+                            ลงนาม (Sign)
+                        </button>
                     )}
                     {getStatusBadge(contract.status)}
                 </div>
@@ -529,7 +520,7 @@ export default function ContractDetail() {
                                             <div className="text-right">
                                                 <p className="font-medium text-green-600">฿{Number(receipt.amount).toLocaleString()}</p>
                                                 <p className="text-sm text-gray-500">{receipt.payment_method}</p>
-                                                <Link to={`/receipts/${receipt.id}`} target="_blank" className="text-xs text-blue-600 hover:underline mt-1 block">
+                                                <Link to={`/receipts/${receipt.encrypted_id}`} target="_blank" className="text-xs text-blue-600 hover:underline mt-1 block">
                                                     {t('contract.receipt')}
                                                 </Link>
                                             </div>

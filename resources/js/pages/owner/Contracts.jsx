@@ -7,6 +7,8 @@ export default function Contracts() {
     const { t } = useTranslation();
     const [contracts, setContracts] = useState([]);
     const [search, setSearch] = useState('');
+    const [filterType, setFilterType] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -14,11 +16,15 @@ export default function Contracts() {
         }, 300);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [search]);
+    }, [search, filterType, filterStatus]);
 
     const fetchContracts = async () => {
         const response = await api.get('/contracts', {
-            params: { search: search }
+            params: {
+                search: search,
+                type: filterType,
+                status: filterStatus
+            }
         });
         setContracts(response.data);
     };
@@ -54,7 +60,7 @@ export default function Contracts() {
                 </Link>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input
                     type="text"
                     placeholder={t('contract.search_placeholder')}
@@ -62,44 +68,70 @@ export default function Contracts() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
+                <select
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                >
+                    <option value="">{t('common.all')} {t('contract.type')}</option>
+                    <option value="hire_purchase">{t('contract.type_hire_purchase')}</option>
+                    <option value="rental">{t('contract.type_rental')}</option>
+                </select>
+                <select
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                    <option value="">{t('common.all')} {t('common.status')}</option>
+                    <option value="pending_signature">{t('contract.status_pending_signature')}</option>
+                    <option value="active">{t('contract.status_active')}</option>
+                    <option value="completed">{t('contract.status_completed')}</option>
+                    <option value="cancelled">{t('contract.status_cancelled')}</option>
+                </select>
             </div>
 
             <div className="bg-white shadow rounded-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.contract_number')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.customer')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.asset')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.contract_type')}</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.total')}</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.status')}</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {contracts.map(contract => (
-                            <tr key={contract.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 hover:underline cursor-pointer">
-                                    <Link to={`/owner/contracts/${contract.id}`}>{contract.contract_number}</Link>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{contract.customer?.name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{contract.asset?.name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTypeBadge(contract.contract_type || contract.type)}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">฿{Number(contract.total_price).toLocaleString()}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    {getStatusBadge(contract.status)}
-                                </td>
-                            </tr>
-                        ))}
-                        {contracts.length === 0 && (
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
                             <tr>
-                                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                                    {t('contract.no_contracts')}
-                                </td>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.contract_number')}</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.customer')}</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.asset')}</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.contract_type')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customer.progress')}</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('contract.total')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.status')}</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {contracts.map(contract => (
+                                <tr key={contract.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 hover:underline cursor-pointer">
+                                        <Link to={`/owner/contracts/${contract.id}`}>{contract.contract_number}</Link>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{contract.customer?.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{contract.asset?.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTypeBadge(contract.contract_type || contract.type)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                                        {contract.paid_installments_count || 0} / {contract.installments_count || 0}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">฿{Number(contract.total_price).toLocaleString()}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                        {getStatusBadge(contract.status)}
+                                    </td>
+                                </tr>
+                            ))}
+                            {contracts.length === 0 && (
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                                        {t('contract.no_contracts')}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

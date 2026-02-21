@@ -17,6 +17,13 @@ class Receipt extends Model
         'paid_at',
     ];
 
+    protected $appends = ['encrypted_id'];
+
+    public function getEncryptedIdAttribute()
+    {
+        return encrypt($this->id);
+    }
+
     public function contract()
     {
         return $this->belongsTo(Contract::class);

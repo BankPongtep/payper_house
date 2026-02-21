@@ -44,7 +44,17 @@ class AssetController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('assets', 'public');
+                $img = \Intervention\Image\Facades\Image::make($image);
+                if ($img->width() > 1200) {
+                    $img->resize(1200, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                    });
+                }
+                $encoded = $img->encode('jpg', 75);
+                $path = 'assets/' . \Illuminate\Support\Str::random(40) . '.jpg';
+                \Illuminate\Support\Facades\Storage::disk('public')->put($path, (string) $encoded);
+
                 $asset->images()->create([
                     'image_path' => '/storage/' . $path,
                     'is_main' => $index === 0, // First image is main by default
@@ -98,7 +108,17 @@ class AssetController extends Controller
         // Handle new images
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $path = $image->store('assets', 'public');
+                $img = \Intervention\Image\Facades\Image::make($image);
+                if ($img->width() > 1200) {
+                    $img->resize(1200, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                    });
+                }
+                $encoded = $img->encode('jpg', 75);
+                $path = 'assets/' . \Illuminate\Support\Str::random(40) . '.jpg';
+                \Illuminate\Support\Facades\Storage::disk('public')->put($path, (string) $encoded);
+
                 $asset->images()->create([
                     'image_path' => '/storage/' . $path,
                     'is_main' => false,

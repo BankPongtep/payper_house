@@ -254,7 +254,11 @@ export default function CustomerContractDetail() {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        {inst.receipt ? (
+                                        {inst.receipt && inst.receipt.encrypted_id ? (
+                                            <Link to={`/receipts/${inst.receipt.encrypted_id}`} target="_blank" className="text-blue-600 hover:text-blue-800">
+                                                <FileText size={18} className="mx-auto" />
+                                            </Link>
+                                        ) : inst.receipt ? (
                                             <Link to={`/receipts/${inst.receipt.id}`} target="_blank" className="text-blue-600 hover:text-blue-800">
                                                 <FileText size={18} className="mx-auto" />
                                             </Link>
