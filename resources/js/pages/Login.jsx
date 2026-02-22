@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -70,9 +70,7 @@ export default function Login() {
                     >
                         {t('auth.login_button')}
                     </button>
-                    <div className="mt-4 text-center">
-                        <Link to="/register" className="text-blue-500 hover:text-blue-700 text-sm">{t('auth.register_link')}</Link>
-                    </div>
+
                 </form>
             </div>
         </div>

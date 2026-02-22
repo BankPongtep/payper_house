@@ -88,9 +88,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 // Public Receipt API
 Route::get('/receipts/{id}', [\App\Http\Controllers\Api\ReceiptController::class, 'show']);
 
-// SSE Notification Stream (auth via query token, no throttle)
-Route::get('/notifications/stream', [\App\Http\Controllers\Api\NotificationController::class, 'stream']);
-
 // Signed Route for PDF Streaming (No Auth Header needed, relies on signature)
 Route::get('contracts/{contract}/stream-pdf', [\App\Http\Controllers\Api\ContractController::class, 'streamPdf'])
     ->name('contracts.pdf.stream')
