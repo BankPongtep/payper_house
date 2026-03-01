@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 
 class UserController extends Controller
@@ -56,8 +57,8 @@ class UserController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users'],
+            'username' => ['required', 'string', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
+            'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
             'password' => ['required', 'confirmed', 'min:8'],
             'role' => ['required', 'in:admin,owner,customer'],
             // Customer specific fields
@@ -153,7 +154,7 @@ class UserController extends Controller
 
         $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)->whereNull('deleted_at')],
             'password' => ['sometimes', 'confirmed', 'min:8'],
             'phone' => ['nullable', 'string', 'max:20'],
             'id_card_number' => ['nullable', 'string'],

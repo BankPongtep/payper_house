@@ -3,6 +3,9 @@ TARGET_HOST="192.168.150.16"
 TARGET_USER="root"
 TARGET_DIR="/var/www/payper_house"
 
+echo "Building frontend assets..."
+npm run prod
+
 echo "Deploying to $TARGET_USER@$TARGET_HOST:$TARGET_DIR..."
 
 # Create directory if not exists

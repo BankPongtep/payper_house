@@ -8,6 +8,7 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Validation\Rule;
 
 
 class AuthController extends Controller
@@ -49,8 +50,8 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:' . User::class],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
+            'username' => ['required', 'string', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
             'password' => ['required', 'confirmed', 'min:8'],
             'role' => ['required', 'in:admin,owner,customer'], // Allow registering specific roles? Maybe restrict customer reg?
             // If customer, require more info?

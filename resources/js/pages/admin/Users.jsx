@@ -12,8 +12,9 @@ export default function Users() {
     const [modalMode, setModalMode] = useState('create'); // create, edit, password
     const [currentUser, setCurrentUser] = useState(null);
 
-    // Search and Pagination
+    // Search, Filter and Pagination
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterRole, setFilterRole] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;    // Helper to get localized name
     const getName = (item) => {
@@ -325,20 +326,24 @@ export default function Users() {
         }
     };
 
-    // Reset to page 1 when search term changes
+    // Reset to page 1 when search term or filter changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm]);
+    }, [searchTerm, filterRole]);
 
     if (loading) return <div>{t('common.loading')}</div>;
 
     // Filter users
-    const filteredUsers = users.filter(user =>
-        (user.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (user.username?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (user.phone || '').includes(searchTerm) ||
-        (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = (user.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (user.username?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (user.phone || '').includes(searchTerm) ||
+            (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+        const matchesRole = filterRole ? user.role === filterRole : true;
+
+        return matchesSearch && matchesRole;
+    });
 
     // Pagination logic
     const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -349,6 +354,16 @@ export default function Users() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold text-gray-800">จัดการผู้ใช้งาน</h1>
                 <div className="flex w-full md:w-auto space-x-3 items-center">
+                    <select
+                        value={filterRole}
+                        onChange={(e) => setFilterRole(e.target.value)}
+                        className="px-4 py-2 border-0 bg-gray-100/70 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors text-sm text-gray-600 outline-none cursor-pointer h-[36px]"
+                    >
+                        <option value="">ทุกประเภท</option>
+                        <option value="admin">Admin</option>
+                        <option value="owner">Owner</option>
+                        <option value="customer">Customer</option>
+                    </select>
                     <div className="relative w-full md:w-80">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Search className="h-4 w-4 text-gray-400" />
@@ -358,7 +373,7 @@ export default function Users() {
                             placeholder="ค้นหาชื่อผู้ใช้, ชื่อ-นามสกุล..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border-0 bg-gray-100/70 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white w-full transition-colors text-sm text-gray-600 placeholder-gray-400"
+                            className="pl-10 pr-4 py-2 border-0 bg-gray-100/70 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white w-full transition-colors text-sm text-gray-600 placeholder-gray-400 h-[36px]"
                         />
                     </div>
                     <button
@@ -394,9 +409,9 @@ export default function Users() {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phone || '-'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    {user.role === 'admin' && <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">Administrator</span>}
-                                    {user.role === 'owner' && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Editor</span>}
-                                    {user.role === 'customer' && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Viewer</span>}
+                                    {user.role === 'admin' && <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">Admin</span>}
+                                    {user.role === 'owner' && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Owner</span>}
+                                    {user.role === 'customer' && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Customer</span>}
                                     {(!['admin', 'owner', 'customer'].includes(user.role)) && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium capitalize">{user.role}</span>}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -475,8 +490,8 @@ export default function Users() {
                                     key={i}
                                     onClick={() => setCurrentPage(i + 1)}
                                     className={`min-w-[32px] px-2 py-1 text-sm rounded transition-colors ${currentPage === i + 1
-                                            ? 'bg-blue-600 text-white font-medium shadow-[0_2px_4px_rgba(37,99,235,0.2)]'
-                                            : 'text-gray-600 hover:bg-gray-50 bg-white font-medium'
+                                        ? 'bg-blue-600 text-white font-medium shadow-[0_2px_4px_rgba(37,99,235,0.2)]'
+                                        : 'text-gray-600 hover:bg-gray-50 bg-white font-medium'
                                         }`}
                                 >
                                     {i + 1}
@@ -623,9 +638,9 @@ export default function Users() {
                                                             onChange={handleChange}
                                                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors bg-white"
                                                         >
-                                                            <option value="customer">roles.customer</option>
-                                                            <option value="owner">roles.owner</option>
-                                                            <option value="admin">roles.admin</option>
+                                                            <option value="customer">Customer</option>
+                                                            <option value="owner">Owner</option>
+                                                            <option value="admin">Admin</option>
                                                         </select>
                                                     </div>
                                                 )}
