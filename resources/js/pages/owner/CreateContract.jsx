@@ -32,12 +32,22 @@ export default function CreateContract() {
 
     useEffect(() => {
         const fetchDependencies = async () => {
-            const [custRes, assetRes] = await Promise.all([
-                api.get('/customers'),
-                api.get('/assets')
-            ]);
-            setCustomers(custRes.data);
-            setAssets(assetRes.data.filter(a => a.status === 'available'));
+            try {
+                const [custRes, assetRes, userRes] = await Promise.all([
+                    api.get('/customers'),
+                    api.get('/assets'),
+                    api.get('/user') // Fetch the current owner's profile to get default interest_rate
+                ]);
+                setCustomers(custRes.data);
+                setAssets(assetRes.data.filter(a => a.status === 'available'));
+
+                // If the user has a specific interest_rate set, populate it
+                if (userRes.data && userRes.data.interest_rate !== null) {
+                    setFormData(prev => ({ ...prev, interest_rate: userRes.data.interest_rate }));
+                }
+            } catch (error) {
+                console.error("Failed to fetch dependencies", error);
+            }
         };
         fetchDependencies();
     }, []);

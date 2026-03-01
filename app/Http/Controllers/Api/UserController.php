@@ -57,7 +57,7 @@ class UserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', 'min:8'],
             'role' => ['required', 'in:admin,owner,customer'],
             // Customer specific fields
@@ -74,6 +74,8 @@ class UserController extends Controller
             'address_district' => ['nullable', 'string'],
             'address_province' => ['nullable', 'string'],
             'address_postal_code' => ['nullable', 'string'],
+            'vat_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'interest_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         // Create the user
@@ -96,6 +98,8 @@ class UserController extends Controller
             'address_district' => $request->address_district,
             'address_province' => $request->address_province,
             'address_postal_code' => $request->address_postal_code,
+            'vat_rate' => $request->vat_rate,
+            'interest_rate' => $request->interest_rate,
         ]);
 
         \App\Helpers\LogActivity::addToLog('CREATE_USER', "Created user: {$user->username} ({$user->id})");
@@ -149,7 +153,7 @@ class UserController extends Controller
 
         $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'email' => ['sometimes', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['sometimes', 'confirmed', 'min:8'],
             'phone' => ['nullable', 'string', 'max:20'],
             'id_card_number' => ['nullable', 'string'],
@@ -164,6 +168,8 @@ class UserController extends Controller
             'address_district' => ['nullable', 'string'],
             'address_province' => ['nullable', 'string'],
             'address_postal_code' => ['nullable', 'string'],
+            'vat_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'interest_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         $data = $request->only([
@@ -181,7 +187,9 @@ class UserController extends Controller
             'address_sub_district',
             'address_district',
             'address_province',
-            'address_postal_code'
+            'address_postal_code',
+            'vat_rate',
+            'interest_rate'
         ]);
 
         if ($request->has('password')) {

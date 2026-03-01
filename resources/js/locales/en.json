@@ -345,5 +345,14 @@
         "amount": "Amount",
         "due_date": "Due Date",
         "paid": "Paid"
+    },
+    "roles": {
+        "admin": "Admin",
+        "owner": "Owner",
+        "customer": "Customer"
+    },
+    "finance": {
+        "vat_rate": "VAT Rate",
+        "interest_rate": "Interest Rate"
     }
 }

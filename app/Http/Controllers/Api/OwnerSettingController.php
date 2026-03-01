@@ -21,6 +21,8 @@ class OwnerSettingController extends Controller
             'bank_account_number' => $user->bank_account_number,
             'bank_account_name' => $user->bank_account_name,
             'promptpay_type' => $user->promptpay_type,
+            'vat_rate' => $user->vat_rate,
+            'interest_rate' => $user->interest_rate,
         ]);
     }
 
@@ -34,6 +36,8 @@ class OwnerSettingController extends Controller
             'bank_account_number' => 'nullable|string|max:50',
             'bank_account_name' => 'nullable|string|max:100',
             'promptpay_type' => 'nullable|string|max:20',
+            'vat_rate' => 'nullable|numeric|min:0|max:100',
+            'interest_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $user = $request->user();
@@ -43,6 +47,8 @@ class OwnerSettingController extends Controller
             'bank_account_number' => $request->bank_account_number,
             'bank_account_name' => $request->bank_account_name,
             'promptpay_type' => $request->promptpay_type,
+            'vat_rate' => $request->vat_rate,
+            'interest_rate' => $request->interest_rate,
         ]);
 
         return response()->json(['message' => 'Settings updated successfully']);

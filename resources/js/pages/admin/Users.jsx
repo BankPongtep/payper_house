@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
-import { User, Home, X, Save, CheckCircle } from 'lucide-react'; // Added Icons
+import { User, Home, X, Save, CheckCircle, Search, Plus } from 'lucide-react';
 
 export default function Users() {
     const { t, i18n } = useTranslation();
@@ -12,7 +12,10 @@ export default function Users() {
     const [modalMode, setModalMode] = useState('create'); // create, edit, password
     const [currentUser, setCurrentUser] = useState(null);
 
-    // Helper to get localized name
+    // Search and Pagination
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;    // Helper to get localized name
     const getName = (item) => {
         if (!item) return '';
         if (i18n.language === 'en' && item.name_en) {
@@ -51,7 +54,18 @@ export default function Users() {
     const fetchUsers = async () => {
         try {
             const response = await api.get('/users');
-            setUsers(response.data);
+            // Sort users by role: admin -> owner -> customer
+            const roleOrder = { admin: 1, owner: 2, customer: 3 };
+            const sortedUsers = response.data.sort((a, b) => {
+                const orderA = roleOrder[a.role] || 99;
+                const orderB = roleOrder[b.role] || 99;
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+                // Fallback to name or id if roles are same
+                return a.id - b.id;
+            });
+            setUsers(sortedUsers);
             setLoading(false);
         } catch (err) {
             setError('Failed to fetch users');
@@ -112,6 +126,8 @@ export default function Users() {
             address_district: '',
             address_province: '',
             address_postal_code: '',
+            vat_rate: '',
+            interest_rate: '',
         });
         setAmphures([]);
         setTambons([]);
@@ -149,6 +165,8 @@ export default function Users() {
             address_district: user.address_district || '',
             address_province: user.address_province || '',
             address_postal_code: user.address_postal_code || '',
+            vat_rate: user.vat_rate || '',
+            interest_rate: user.interest_rate || '',
         });
 
         // Pre-load cascading data if address exists
@@ -307,87 +325,125 @@ export default function Users() {
         }
     };
 
+    // Reset to page 1 when search term changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
     if (loading) return <div>{t('common.loading')}</div>;
+
+    // Filter users
+    const filteredUsers = users.filter(user =>
+        (user.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (user.username?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (user.phone || '').includes(searchTerm) ||
+        (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    );
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">{t('user.management')}</h1>
-                <button
-                    onClick={handleOpenCreate}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                    {t('user.create_new')}
-                </button>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h1 className="text-2xl font-bold text-gray-800">จัดการผู้ใช้งาน</h1>
+                <div className="flex w-full md:w-auto space-x-3 items-center">
+                    <div className="relative w-full md:w-80">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="ค้นหาชื่อผู้ใช้, ชื่อ-นามสกุล..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4 py-2 border-0 bg-gray-100/70 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white w-full transition-colors text-sm text-gray-600 placeholder-gray-400"
+                        />
+                    </div>
+                    <button
+                        onClick={handleOpenCreate}
+                        className="bg-[#007BFF] text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors whitespace-nowrap flex items-center text-sm font-medium shadow-sm"
+                    >
+                        <Plus className="w-4 h-4 mr-1.5" />
+                        เพิ่มผู้ใช้งานใหม่
+                    </button>
+                </div>
             </div>
 
             {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
 
-            <div className="bg-white shadow-md rounded-lg overflow-hidden min-h-[400px]">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+            <div className="bg-white border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-xl overflow-visible min-h-[400px]">
+                <table className="min-w-full divide-y divide-gray-100">
+                    <thead className="bg-transparent">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.username')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.name')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.phone')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('user.role')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.status')}</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.actions')}</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">ID</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">ชื่อผู้ใช้</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">ชื่อ-นามสกุล</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">เบอร์โทรศัพท์</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">ระดับผู้ใช้</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500">สถานะ</th>
+                            <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500">การจัดการ</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {users.map((user) => (
-                            <tr key={user.id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.id}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.username}</td>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                        {paginatedUsers.map((user) => (
+                            <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{String(user.id).padStart(3, '0')}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{user.username}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phone || '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{t(`roles.${user.role}`)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_locked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                                        {user.is_locked ? 'Locked' : 'Active'}
+                                    {user.role === 'admin' && <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">Administrator</span>}
+                                    {user.role === 'owner' && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Editor</span>}
+                                    {user.role === 'customer' && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Viewer</span>}
+                                    {(!['admin', 'owner', 'customer'].includes(user.role)) && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium capitalize">{user.role}</span>}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2.5 py-1 inline-flex items-center text-xs font-medium rounded-full ${user.is_locked ? 'bg-gray-100 text-gray-500' : 'bg-green-50 text-green-600'}`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.is_locked ? 'bg-gray-400' : 'bg-green-500'}`}></span>
+                                        {user.is_locked ? 'Inactive' : 'Active'}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); toggleMenu(user.id); }}
-                                        className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                        </svg>
-                                    </button>
+                                    <div className="flex justify-end items-center space-x-3">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); toggleMenu(user.id); }}
+                                            className="text-blue-500 hover:text-blue-700 focus:outline-none font-medium text-sm transition-colors"
+                                        >
+                                            แก้ไข
+                                        </button>
+                                    </div>
 
                                     {activeMenuId === user.id && (
                                         <div
                                             ref={menuRef}
-                                            className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 ring-1 ring-black ring-opacity-5 origin-top-right"
+                                            className="absolute right-6 mt-1.5 w-40 bg-white rounded-md shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 ring-1 ring-black ring-opacity-5 origin-top-right text-left overflow-hidden"
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <div className="py-1">
                                                 <button
                                                     onClick={() => handleOpenEdit(user)}
-                                                    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    className="w-full text-left block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium"
                                                 >
                                                     {t('common.edit')}
                                                 </button>
                                                 <button
                                                     onClick={() => handleOpenPassword(user)}
-                                                    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    className="w-full text-left block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium"
                                                 >
                                                     {t('common.change_password')}
                                                 </button>
                                                 <button
                                                     onClick={() => handleToggleLock(user)}
-                                                    className={`w-full text-left block px-4 py-2 text-sm hover:bg-gray-100 ${user.is_locked ? 'text-green-600' : 'text-amber-600'}`}
+                                                    className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-50 font-medium ${user.is_locked ? 'text-green-600' : 'text-amber-600'}`}
                                                 >
                                                     {user.is_locked ? t('user.unlock_user') : t('user.lock_user')}
                                                 </button>
-                                                <div className="border-t border-gray-100 my-1"></div>
+                                                <div className="border-t border-gray-100 my-0.5"></div>
                                                 <button
                                                     onClick={() => handleDelete(user)}
-                                                    className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                    className="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium"
                                                 >
                                                     {t('common.delete')}
                                                 </button>
@@ -399,6 +455,43 @@ export default function Users() {
                         ))}
                     </tbody>
                 </table>
+
+                {/* Pagination Controls inside the table container */}
+                {totalPages > 0 && (
+                    <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-gray-100 bg-gray-50/30">
+                        <div className="text-sm text-gray-500 mb-4 sm:mb-0">
+                            แสดง {(currentPage - 1) * itemsPerPage + 1} ถึง {Math.min(currentPage * itemsPerPage, filteredUsers.length)} จาก {filteredUsers.length} รายการ
+                        </div>
+                        <div className="flex space-x-1 border border-gray-200 rounded-md bg-white p-0.5 shadow-sm">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                &lt;
+                            </button>
+                            {[...Array(totalPages)].map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className={`min-w-[32px] px-2 py-1 text-sm rounded transition-colors ${currentPage === i + 1
+                                            ? 'bg-blue-600 text-white font-medium shadow-[0_2px_4px_rgba(37,99,235,0.2)]'
+                                            : 'text-gray-600 hover:bg-gray-50 bg-white font-medium'
+                                        }`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                &gt;
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Modal */}
@@ -471,7 +564,7 @@ export default function Users() {
 
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                        {t('user.email')} <span className="text-red-500">*</span>
+                                                        {t('user.email')}
                                                     </label>
                                                     <div className="relative">
                                                         <input
@@ -481,7 +574,6 @@ export default function Users() {
                                                             onChange={handleChange}
                                                             className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors ${formData.email && formData.email.includes('@') ? 'border-green-500 pr-10' : 'border-gray-300'}`}
                                                             placeholder="somchai@example.com"
-                                                            required
                                                         />
                                                         {formData.email && formData.email.includes('@') && (
                                                             <CheckCircle className="w-5 h-5 text-green-500 absolute right-3 top-1/2 transform -translate-y-1/2" />
@@ -537,6 +629,41 @@ export default function Users() {
                                                         </select>
                                                     </div>
                                                 )}
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                            {t('finance.vat_rate')} (%)
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            max="100"
+                                                            name="vat_rate"
+                                                            value={formData.vat_rate}
+                                                            onChange={handleChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                            placeholder={t('common.default')}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                            {t('finance.interest_rate')} (%)
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            max="100"
+                                                            name="interest_rate"
+                                                            value={formData.interest_rate}
+                                                            onChange={handleChange}
+                                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors"
+                                                            placeholder={t('common.default')}
+                                                        />
+                                                    </div>
+                                                </div>
 
                                                 {modalMode === 'create' && (
                                                     <div className="grid grid-cols-2 gap-4">

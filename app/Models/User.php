@@ -43,6 +43,8 @@ class User extends Authenticatable
         'bank_account_name',
         'promptpay_type',
         'payment_qr_code',
+        'vat_rate',
+        'interest_rate',
     ];
 
     /**
