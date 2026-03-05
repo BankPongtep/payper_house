@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, CheckCircle2, XCircle } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function Customers() {
     const { t, i18n } = useTranslation();
@@ -53,6 +54,8 @@ export default function Customers() {
     const [showModal, setShowModal] = useState(false);
     const [modalMode, setModalMode] = useState('create'); // create, edit, password
     const [currentUser, setCurrentUser] = useState(null);
+    const [usernameAvailable, setUsernameAvailable] = useState(null); // null = untested, true = available, false = taken
+    const [isCheckingUsername, setIsCheckingUsername] = useState(false);
 
     // Dropdown state
     const [activeMenuId, setActiveMenuId] = useState(null);
@@ -150,6 +153,8 @@ export default function Customers() {
         setAmphures([]);
         setTambons([]);
         setError(null);
+        setUsernameAvailable(null);
+        setIsCheckingUsername(false);
     };
 
     const handleOpenCreate = () => {
@@ -225,10 +230,32 @@ export default function Customers() {
     };
 
     const handleChange = (e) => {
+        const { name, value } = e.target;
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+
+        if (name === 'username' && modalMode === 'create') {
+            checkUsername(value);
+        }
+    };
+
+    const checkUsername = async (username) => {
+        if (!username || username.length < 3) {
+            setUsernameAvailable(null);
+            return;
+        }
+
+        setIsCheckingUsername(true);
+        try {
+            const res = await api.get(`/users/check-username?username=${username}`);
+            setUsernameAvailable(res.data.available);
+        } catch (err) {
+            setUsernameAvailable(null);
+        } finally {
+            setIsCheckingUsername(false);
+        }
     };
 
     const handleProvinceChange = async (e) => {
@@ -292,19 +319,74 @@ export default function Customers() {
 
         try {
             if (modalMode === 'create') {
+                if (formData.password !== formData.password_confirmation) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน',
+                        confirmButtonText: 'ตกลง'
+                    });
+                    return;
+                }
                 await api.post('/users', formData);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'สร้างบัญชีผู้ใช้ใหม่เรียบร้อยแล้ว',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             } else if (modalMode === 'edit') {
-                await api.put(`/users/${currentUser.id}`, formData);
+                // Remove password from payload if empty to satisfy validation
+                const updatePayload = { ...formData };
+                if (!updatePayload.password) {
+                    delete updatePayload.password;
+                    delete updatePayload.password_confirmation;
+                }
+
+                await api.put(`/users/${currentUser.id}`, updatePayload);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'แก้ไขข้อมูลผู้ใช้เรียบร้อยแล้ว',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             } else if (modalMode === 'password') {
+                if (formData.password !== formData.password_confirmation) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน',
+                        confirmButtonText: 'ตกลง'
+                    });
+                    return;
+                }
                 await api.put(`/users/${currentUser.id}`, {
                     password: formData.password,
                     password_confirmation: formData.password_confirmation
+                });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว',
+                    timer: 2000,
+                    showConfirmButton: false
                 });
             }
             fetchUsers();
             handleCloseModal();
         } catch (err) {
-            setError(err.response?.data?.message || 'Operation failed');
+            let errorMsg = err.response?.data?.message || 'Operation failed';
+            if (err.response?.data?.errors) {
+                errorMsg = Object.values(err.response.data.errors).flat().join('\n');
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: errorMsg,
+                confirmButtonText: 'ตกลง'
+            });
         }
     };
 
@@ -313,9 +395,21 @@ export default function Customers() {
         setActiveMenuId(null);
         try {
             await api.delete(`/users/${user.id}`);
+            Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ',
+                text: 'ลบข้อมูลลูกค้าเรียบร้อยแล้ว',
+                timer: 2000,
+                showConfirmButton: false
+            });
             fetchUsers();
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to delete customer');
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: err.response?.data?.message || 'Failed to delete customer',
+                confirmButtonText: 'ตกลง'
+            });
         }
     };
 
@@ -355,8 +449,6 @@ export default function Customers() {
                     </button>
                 </div>
             </div>
-
-            {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
 
             <div className="bg-white border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-xl overflow-visible min-h-[400px]">
                 <table className="min-w-full divide-y divide-gray-100">
@@ -430,335 +522,383 @@ export default function Customers() {
                 </table>
 
                 {/* Pagination Controls inside the table container */}
-                {totalPages > 0 && (
-                    <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-gray-100 bg-gray-50/30">
-                        <div className="text-sm text-gray-500 mb-4 sm:mb-0">
-                            แสดง {Math.min((currentPage - 1) * itemsPerPage + 1, filteredUsers.length)} ถึง {Math.min(currentPage * itemsPerPage, filteredUsers.length)} จาก {filteredUsers.length} รายการ
-                        </div>
-                        <div className="flex space-x-1 border border-gray-200 rounded-md bg-white p-0.5 shadow-sm">
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                &lt;
-                            </button>
-                            {[...Array(totalPages)].map((_, i) => (
+                {
+                    totalPages > 0 && (
+                        <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-gray-100 bg-gray-50/30">
+                            <div className="text-sm text-gray-500 mb-4 sm:mb-0">
+                                แสดง {Math.min((currentPage - 1) * itemsPerPage + 1, filteredUsers.length)} ถึง {Math.min(currentPage * itemsPerPage, filteredUsers.length)} จาก {filteredUsers.length} รายการ
+                            </div>
+                            <div className="flex space-x-1 border border-gray-200 rounded-md bg-white p-0.5 shadow-sm">
                                 <button
-                                    key={i}
-                                    onClick={() => setCurrentPage(i + 1)}
-                                    className={`min-w-[32px] px-2 py-1 text-sm rounded transition-colors ${currentPage === i + 1
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    &lt;
+                                </button>
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`min-w-[32px] px-2 py-1 text-sm rounded transition-colors ${currentPage === i + 1
                                             ? 'bg-blue-600 text-white font-medium shadow-[0_2px_4px_rgba(37,99,235,0.2)]'
                                             : 'text-gray-600 hover:bg-gray-50 bg-white font-medium'
-                                        }`}
+                                            }`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    {i + 1}
+                                    &gt;
                                 </button>
-                            ))}
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                                className="px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                &gt;
-                            </button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )
+                }
+            </div >
 
             {/* Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-50">
-                    <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                        <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={handleCloseModal}>
-                            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-                        </div>
+            {
+                showModal && (
+                    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-50">
+                        <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                            <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={handleCloseModal}>
+                                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+                            </div>
 
-                        {/* This element is to trick the browser into centering the modal contents. */}
-                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                            {/* This element is to trick the browser into centering the modal contents. */}
+                            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                        <div
-                            className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full p-6"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <h2 className="text-xl font-bold mb-6 border-b pb-2">
-                                {modalMode === 'create' ? t('customer.create_new') : modalMode === 'edit' ? t('customer.edit') : t('common.change_password')}
-                            </h2>
+                            <div
+                                className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full p-6"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <h2 className="text-xl font-bold mb-6 border-b pb-2">
+                                    {modalMode === 'create' ? t('customer.create_new') : modalMode === 'edit' ? t('customer.edit') : t('common.change_password')}
+                                </h2>
 
-                            <form onSubmit={handleSubmit}>
-                                {modalMode !== 'password' ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {/* Left Column: Account Info */}
-                                        <div className="space-y-4">
-                                            <h3 className="text-md font-semibold text-gray-700 bg-gray-50 p-2 rounded">ข้อมูลบัญชี (Account)</h3>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.name')}</label>
-                                                <input
-                                                    type="text"
-                                                    name="name"
-                                                    value={formData.name}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.username')}</label>
-                                                <input
-                                                    type="text"
-                                                    name="username"
-                                                    value={formData.username}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                                                    required
-                                                    disabled={modalMode === 'edit'}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.email')}</label>
-                                                <input
-                                                    type="email"
-                                                    name="email"
-                                                    value={formData.email}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.phone')}</label>
-                                                <input
-                                                    type="text"
-                                                    name="phone"
-                                                    value={formData.phone}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700">{t('user.id_card')}</label>
-                                                <input
-                                                    type="text"
-                                                    name="id_card_number"
-                                                    value={formData.id_card_number}
-                                                    onChange={handleChange}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                            </div>
-
-                                            {modalMode === 'create' && (
-                                                <>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
+                                <form id="customerForm" onSubmit={handleSubmit} className="space-y-6">
+                                    {modalMode !== 'password' ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* Left Column: Account Info */}
+                                            <div className="space-y-4">
+                                                <h3 className="text-md font-semibold text-gray-700 bg-gray-50 p-2 rounded">ข้อมูลบัญชี (Account)</h3>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('user.name')}</label>
+                                                    <input
+                                                        type="text"
+                                                        name="name"
+                                                        value={formData.name}
+                                                        onChange={handleChange}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('user.username')}</label>
+                                                    <div className="relative">
                                                         <input
-                                                            type="password"
-                                                            name="password"
-                                                            value={formData.password}
+                                                            type="text"
+                                                            name="username"
+                                                            value={formData.username}
+                                                            onChange={handleChange}
+                                                            className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 ${modalMode === 'create' && usernameAvailable === true ? 'border-green-500 ring-1 ring-green-500' :
+                                                                modalMode === 'create' && usernameAvailable === false ? 'border-red-500 ring-1 ring-red-500' :
+                                                                    'border-gray-300'
+                                                                }`}
+                                                            required
+                                                            disabled={modalMode === 'edit'}
+                                                        />
+                                                        {modalMode === 'create' && usernameAvailable === true && (
+                                                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none mt-1">
+                                                                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                                            </div>
+                                                        )}
+                                                        {modalMode === 'create' && usernameAvailable === false && (
+                                                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none mt-1">
+                                                                <XCircle className="h-5 w-5 text-red-500" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('user.email')}</label>
+                                                    <input
+                                                        type="email"
+                                                        name="email"
+                                                        value={formData.email}
+                                                        onChange={handleChange}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('user.phone')}</label>
+                                                    <input
+                                                        type="text"
+                                                        name="phone"
+                                                        value={formData.phone}
+                                                        onChange={handleChange}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">{t('user.id_card')}</label>
+                                                    <input
+                                                        type="text"
+                                                        name="id_card_number"
+                                                        value={formData.id_card_number}
+                                                        onChange={handleChange}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                    />
+                                                </div>
+
+                                                {modalMode === 'create' && (() => {
+                                                    const passwordsMatch = formData.password && formData.password_confirmation
+                                                        ? formData.password === formData.password_confirmation
+                                                        : null;
+
+                                                    const getBorderClass = (val) => {
+                                                        if (!val) return 'border-gray-300';
+                                                        if (passwordsMatch === true) return 'border-green-500 ring-1 ring-green-500';
+                                                        if (passwordsMatch === false && formData.password_confirmation) return 'border-red-500 ring-1 ring-red-500';
+                                                        return 'border-gray-300';
+                                                    };
+
+                                                    return (
+                                                        <>
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
+                                                                <input
+                                                                    type="password"
+                                                                    name="password"
+                                                                    value={formData.password}
+                                                                    onChange={handleChange}
+                                                                    className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${getBorderClass(formData.password)}`}
+                                                                    required
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
+                                                                <input
+                                                                    type="password"
+                                                                    name="password_confirmation"
+                                                                    value={formData.password_confirmation}
+                                                                    onChange={handleChange}
+                                                                    className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${getBorderClass(formData.password_confirmation)}`}
+                                                                    required
+                                                                />
+                                                            </div>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+
+                                            {/* Right Column: Address Info */}
+                                            <div className="space-y-4">
+                                                <h3 className="text-md font-semibold text-gray-700 bg-gray-50 p-2 rounded">ข้อมูลที่อยู่ (Address)</h3>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.house_no')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_house_no"
+                                                            value={formData.address_house_no}
                                                             onChange={handleChange}
                                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                            required
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.village')}</label>
                                                         <input
-                                                            type="password"
-                                                            name="password_confirmation"
-                                                            value={formData.password_confirmation}
+                                                            type="text"
+                                                            name="address_village"
+                                                            value={formData.address_village}
                                                             onChange={handleChange}
                                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                            required
                                                         />
                                                     </div>
-                                                </>
-                                            )}
-                                        </div>
-
-                                        {/* Right Column: Address Info */}
-                                        <div className="space-y-4">
-                                            <h3 className="text-md font-semibold text-gray-700 bg-gray-50 p-2 rounded">ข้อมูลที่อยู่ (Address)</h3>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.house_no')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_house_no"
-                                                        value={formData.address_house_no}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.village')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_village"
-                                                        value={formData.address_village}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.floor')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_floor"
-                                                        value={formData.address_floor}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    />
                                                 </div>
 
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.moo')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_moo"
-                                                        value={formData.address_moo}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    />
-                                                </div>
-                                            </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.floor')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_floor"
+                                                            value={formData.address_floor}
+                                                            onChange={handleChange}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        />
+                                                    </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.soi')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_soi"
-                                                        value={formData.address_soi}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    />
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.moo')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_moo"
+                                                            value={formData.address_moo}
+                                                            onChange={handleChange}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.road')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_road"
-                                                        value={formData.address_road}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    />
-                                                </div>
-                                            </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.sub_district')}</label>
-                                                    <select
-                                                        name="address_sub_district"
-                                                        value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
-                                                        onChange={handleTambonChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        disabled={!formData.address_district}
-                                                    >
-                                                        <option value="">{t('address.select_sub_district')}</option>
-                                                        {tambons.map(t => (
-                                                            <option key={t.id} value={t.id}>{getName(t)}</option>
-                                                        ))}
-                                                    </select>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.soi')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_soi"
+                                                            value={formData.address_soi}
+                                                            onChange={handleChange}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.road')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_road"
+                                                            value={formData.address_road}
+                                                            onChange={handleChange}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.district')}</label>
-                                                    <select
-                                                        name="address_district"
-                                                        value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
-                                                        onChange={handleAmphureChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        disabled={!formData.address_province}
-                                                    >
-                                                        <option value="">{t('address.select_district')}</option>
-                                                        {amphures.map(a => (
-                                                            <option key={a.id} value={a.id}>{getName(a)}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.province')}</label>
-                                                    <select
-                                                        name="address_province"
-                                                        value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
-                                                        onChange={handleProvinceChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                    >
-                                                        <option value="">{t('address.select_province')}</option>
-                                                        {provinces.map(p => (
-                                                            <option key={p.id} value={p.id}>{getName(p)}</option>
-                                                        ))}
-                                                    </select>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.province')}</label>
+                                                        <select
+                                                            name="address_province"
+                                                            value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
+                                                            onChange={handleProvinceChange}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                        >
+                                                            <option value="">{t('address.select_province')}</option>
+                                                            {provinces.map(p => (
+                                                                <option key={p.id} value={p.id}>{getName(p)}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.district')}</label>
+                                                        <select
+                                                            name="address_district"
+                                                            value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
+                                                            onChange={handleAmphureChange}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            disabled={!formData.address_province}
+                                                        >
+                                                            <option value="">{t('address.select_district')}</option>
+                                                            {amphures.map(a => (
+                                                                <option key={a.id} value={a.id}>{getName(a)}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700">{t('address.postal_code')}</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address_postal_code"
-                                                        value={formData.address_postal_code}
-                                                        onChange={handleChange}
-                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                                                        readOnly
-                                                    />
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.sub_district')}</label>
+                                                        <select
+                                                            name="address_sub_district"
+                                                            value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
+                                                            onChange={handleTambonChange}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            disabled={!formData.address_district}
+                                                        >
+                                                            <option value="">{t('address.select_sub_district')}</option>
+                                                            {tambons.map(t => (
+                                                                <option key={t.id} value={t.id}>{getName(t)}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700">{t('address.postal_code')}</label>
+                                                        <input
+                                                            type="text"
+                                                            name="address_postal_code"
+                                                            value={formData.address_postal_code}
+                                                            onChange={handleChange}
+                                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                                                            readOnly
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    ) : (
+                                        // Password Change Mode
+                                        <div className="max-w-md mx-auto">
+                                            {(() => {
+                                                const passwordsMatch = formData.password && formData.password_confirmation
+                                                    ? formData.password === formData.password_confirmation
+                                                    : null;
+
+                                                const getBorderClass = (val) => {
+                                                    if (!val) return 'border-gray-300';
+                                                    if (passwordsMatch === true) return 'border-green-500 ring-1 ring-green-500';
+                                                    if (passwordsMatch === false && formData.password_confirmation) return 'border-red-500 ring-1 ring-red-500';
+                                                    return 'border-gray-300';
+                                                };
+
+                                                return (
+                                                    <>
+                                                        <div className="mb-4">
+                                                            <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
+                                                            <input
+                                                                type="password"
+                                                                name="password"
+                                                                value={formData.password}
+                                                                onChange={handleChange}
+                                                                className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${getBorderClass(formData.password)}`}
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <div className="mb-4">
+                                                            <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
+                                                            <input
+                                                                type="password"
+                                                                name="password_confirmation"
+                                                                value={formData.password_confirmation}
+                                                                onChange={handleChange}
+                                                                className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${getBorderClass(formData.password_confirmation)}`}
+                                                                required
+                                                            />
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                                        <button
+                                            type="button"
+                                            onClick={handleCloseModal}
+                                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
+                                        >
+                                            {t('common.cancel')}
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                        >
+                                            {t('common.save')}
+                                        </button>
                                     </div>
-                                ) : (
-                                    // Password Change Mode
-                                    <div className="max-w-md mx-auto">
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
-                                            <input
-                                                type="password"
-                                                name="password"
-                                                value={formData.password}
-                                                onChange={handleChange}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
-                                            <input
-                                                type="password"
-                                                name="password_confirmation"
-                                                value={formData.password_confirmation}
-                                                onChange={handleChange}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-end space-x-3 mt-8 pt-4 border-t">
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseModal}
-                                        className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                                    >
-                                        {t('common.save')}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+                                </form>
+                            </div >
+                        </div >
+                    </div >
+                )
+            }
+        </div >
     );
 }

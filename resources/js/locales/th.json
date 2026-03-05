@@ -170,7 +170,8 @@
             "rented": "เช่าอยู่",
             "leased": "เช่าแล้ว",
             "under_maintenance": "ปิดปรับปรุง",
-            "sold": "ขายแล้ว"
+            "sold": "ขายแล้ว",
+            "sold_direct_installment": "ขายแล้ว(ผ่อนตรง)"
         },
         "type": "ประเภท",
         "confirm_delete_image_text": "คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้?",

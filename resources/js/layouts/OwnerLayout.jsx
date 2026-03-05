@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, Building2, Users, FileText, Settings, CreditCard } from 'lucide-react';
 import api from '../api';
@@ -10,7 +10,18 @@ export default function OwnerLayout() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const user = JSON.parse(localStorage.getItem('user'));
+    const token = localStorage.getItem('token');
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
+
+    if (!token || !user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (user.role !== 'owner') {
+        if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+        return <Navigate to="/customer/dashboard" replace />;
+    }
 
     const handleLogout = async () => {
         try {

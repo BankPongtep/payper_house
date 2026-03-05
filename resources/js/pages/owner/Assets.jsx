@@ -233,7 +233,8 @@ export default function Assets() {
                                 <h3 className="text-lg font-bold text-gray-800 line-clamp-1" title={asset.name}>{asset.name}</h3>
                                 <span className={`px-2 py-1 text-xs rounded-full font-medium ${asset.status === 'available' ? 'bg-green-100 text-green-700' :
                                     (asset.status === 'leased' || asset.status === 'rented') ? 'bg-blue-100 text-blue-700' :
-                                        'bg-gray-100 text-gray-700'
+                                        (asset.status === 'sold' || asset.status === 'sold_direct_installment') ? 'bg-purple-100 text-purple-700' :
+                                            'bg-gray-100 text-gray-700'
                                     }`}>
                                     {t(`asset.status_options.${asset.status}`) || asset.status}
                                 </span>
@@ -343,6 +344,7 @@ export default function Assets() {
                                                     <option value="available">{t('asset.status_options.available')}</option>
                                                     <option value="leased">{t('asset.status_options.leased')}</option>
                                                     <option value="sold">{t('asset.status_options.sold')}</option>
+                                                    <option value="sold_direct_installment">{t('asset.status_options.sold_direct_installment')}</option>
                                                 </select>
                                             </div>
                                         </div>

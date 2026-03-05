@@ -282,7 +282,8 @@ class ContractController extends Controller
             }
 
             // Update Asset status
-            $contract->asset()->update(['status' => 'leased']);
+            $assetStatus = ($contractType === 'hire_purchase') ? 'sold_direct_installment' : 'leased';
+            $contract->asset()->update(['status' => $assetStatus]);
 
             DB::commit();
 
@@ -655,7 +656,9 @@ class ContractController extends Controller
                 ]);
             }
 
-            // Asset status remains 'leased' (or similar), no change needed if already leased.
+            // 4. Update Asset status (in case it changed or for consistency)
+            $assetStatus = ($contractType === 'hire_purchase') ? 'sold_direct_installment' : 'leased';
+            $contract->asset()->update(['status' => $assetStatus]);
 
             DB::commit();
 

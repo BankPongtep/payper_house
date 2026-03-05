@@ -128,6 +128,23 @@ class UserController extends Controller
     }
 
     /**
+     * Check if a username is available
+     */
+    public function checkUsername(Request $request)
+    {
+        $username = $request->query('username');
+        if (!$username) {
+            return response()->json(['available' => false, 'message' => 'Username is required'], 400);
+        }
+
+        $exists = User::where('username', $username)->whereNull('deleted_at')->exists();
+        return response()->json([
+            'available' => !$exists,
+            'message' => !$exists ? 'Username is available' : 'Username is already taken'
+        ]);
+    }
+
+    /**
      * Display the specified user.
      */
     public function show(Request $request, User $user)

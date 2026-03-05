@@ -1,11 +1,22 @@
 import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, Navigate } from 'react-router-dom';
 import api from '../api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function AdminLayout() {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user'));
+    const token = localStorage.getItem('token');
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
+
+    if (!token || !user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (user.role !== 'admin') {
+        if (user.role === 'owner') return <Navigate to="/owner/dashboard" replace />;
+        return <Navigate to="/customer/dashboard" replace />;
+    }
 
     const handleLogout = async () => {
         try {

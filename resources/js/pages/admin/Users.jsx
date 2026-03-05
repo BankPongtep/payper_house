@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import { User, Home, X, Save, CheckCircle, Search, Plus } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function Users() {
     const { t, i18n } = useTranslation();
@@ -281,12 +282,40 @@ export default function Users() {
         try {
             if (modalMode === 'create') {
                 await api.post('/users', formData);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'สร้างบัญชีผู้ใช้ใหม่เรียบร้อยแล้ว',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             } else if (modalMode === 'edit') {
-                await api.put(`/users/${currentUser.id}`, formData);
+                // Remove password from payload if empty to satisfy validation
+                const updatePayload = { ...formData };
+                if (!updatePayload.password) {
+                    delete updatePayload.password;
+                    delete updatePayload.password_confirmation;
+                }
+
+                await api.put(`/users/${currentUser.id}`, updatePayload);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'แก้ไขข้อมูลผู้ใช้เรียบร้อยแล้ว',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             } else if (modalMode === 'password') {
                 await api.put(`/users/${currentUser.id}`, {
                     password: formData.password,
                     password_confirmation: formData.password_confirmation
+                });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว',
+                    timer: 2000,
+                    showConfirmButton: false
                 });
             }
             fetchUsers();

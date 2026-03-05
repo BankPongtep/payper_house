@@ -23,6 +23,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // User management (admin and owner only)
     Route::middleware(['role:admin,owner'])->group(function () {
+        Route::get('users/check-username', [UserController::class, 'checkUsername']);
         Route::apiResource('users', UserController::class);
         Route::post('users/{user}/toggle-lock', [UserController::class, 'toggleLock']);
     });
