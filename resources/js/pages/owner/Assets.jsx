@@ -320,6 +320,7 @@ export default function Assets() {
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">{t('asset.management')}</h2>
                 <button
+                    id="btn-create-asset"
                     onClick={() => handleOpenModal()}
                     className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow"
                 >
@@ -378,7 +379,7 @@ export default function Assets() {
                             <h3 className="text-xl font-bold text-gray-800">
                                 {editingAsset ? t('asset.edit') : t('asset.create_new')}
                             </h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                            <button id="btn-close-modal" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <X size={24} />
                             </button>
                         </div>
@@ -386,6 +387,7 @@ export default function Assets() {
                         {/* Tabs */}
                         <div className="flex border-b px-6">
                             <button
+                                id="tab-info"
                                 onClick={() => setActiveTab('info')}
                                 className={`px-4 py-3 text-sm font-medium border-b-2 transition ${activeTab === 'info' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
@@ -394,6 +396,7 @@ export default function Assets() {
                                 </div>
                             </button>
                             <button
+                                id="tab-address"
                                 onClick={() => setActiveTab('address')}
                                 className={`px-4 py-3 text-sm font-medium border-b-2 transition ${activeTab === 'address' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
@@ -402,6 +405,7 @@ export default function Assets() {
                                 </div>
                             </button>
                             <button
+                                id="tab-images"
                                 onClick={() => setActiveTab('images')}
                                 className={`px-4 py-3 text-sm font-medium border-b-2 transition ${activeTab === 'images' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
@@ -420,6 +424,7 @@ export default function Assets() {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">{t('asset.name')}</label>
                                             <input
+                                                id="input-asset-name"
                                                 type="text"
                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                                                 value={formData.name}
@@ -430,6 +435,7 @@ export default function Assets() {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">{t('asset.description')}</label>
                                             <textarea
+                                                id="input-asset-description"
                                                 rows={4}
                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                                                 value={formData.description}
@@ -440,6 +446,7 @@ export default function Assets() {
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('asset.price')}</label>
                                                 <input
+                                                    id="input-asset-price"
                                                     type="text"
                                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-right"
                                                     value={formData.price ? Number(formData.price).toLocaleString() : ''}
@@ -454,6 +461,7 @@ export default function Assets() {
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('asset.status')}</label>
                                                 <select
+                                                    id="input-asset-status"
                                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                                                     value={formData.status}
                                                     onChange={e => setFormData({ ...formData, status: e.target.value })}
@@ -473,23 +481,24 @@ export default function Assets() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="col-span-1">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.house_no')}</label>
-                                            <input type="text" className="w-full border rounded-lg p-2" value={formData.address_house_no} onChange={e => setFormData({ ...formData, address_house_no: e.target.value })} />
+                                            <input id="input-address-house-no" type="text" className="w-full border rounded-lg p-2" value={formData.address_house_no} onChange={e => setFormData({ ...formData, address_house_no: e.target.value })} />
                                         </div>
                                         <div className="col-span-1">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.floor')}</label>
-                                            <input type="text" className="w-full border rounded-lg p-2" value={formData.address_floor} onChange={e => setFormData({ ...formData, address_floor: e.target.value })} />
+                                            <input id="input-address-floor" type="text" className="w-full border rounded-lg p-2" value={formData.address_floor} onChange={e => setFormData({ ...formData, address_floor: e.target.value })} />
                                         </div>
                                         <div className="col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.village')}</label>
-                                            <input type="text" className="w-full border rounded-lg p-2" value={formData.address_village} onChange={e => setFormData({ ...formData, address_village: e.target.value })} />
+                                            <input id="input-address-village" type="text" className="w-full border rounded-lg p-2" value={formData.address_village} onChange={e => setFormData({ ...formData, address_village: e.target.value })} />
                                         </div>
-                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.moo')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_moo} onChange={e => setFormData({ ...formData, address_moo: e.target.value })} /></div>
-                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.soi')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_soi} onChange={e => setFormData({ ...formData, address_soi: e.target.value })} /></div>
-                                        <div className="col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.road')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_road} onChange={e => setFormData({ ...formData, address_road: e.target.value })} /></div>
+                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.moo')}</label><input id="input-address-moo" type="text" className="w-full border rounded-lg p-2" value={formData.address_moo} onChange={e => setFormData({ ...formData, address_moo: e.target.value })} /></div>
+                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.soi')}</label><input id="input-address-soi" type="text" className="w-full border rounded-lg p-2" value={formData.address_soi} onChange={e => setFormData({ ...formData, address_soi: e.target.value })} /></div>
+                                        <div className="col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.road')}</label><input id="input-address-road" type="text" className="w-full border rounded-lg p-2" value={formData.address_road} onChange={e => setFormData({ ...formData, address_road: e.target.value })} /></div>
 
                                         <div className="col-span-1">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.province')}</label>
                                             <select
+                                                id="input-address-province"
                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                                                 value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
                                                 onChange={handleProvinceChange}
@@ -503,6 +512,7 @@ export default function Assets() {
                                         <div className="col-span-1">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.district')}</label>
                                             <select
+                                                id="input-address-district"
                                                 className={`w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition disabled:bg-gray-200 ${!formData.address_province ? 'bg-gray-200' : ''}`}
                                                 value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
                                                 onChange={handleAmphureChange}
@@ -517,6 +527,7 @@ export default function Assets() {
                                         <div className="col-span-1">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.sub_district')}</label>
                                             <select
+                                                id="input-address-sub-district"
                                                 className={`w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition disabled:bg-gray-200 ${!formData.address_district ? 'bg-gray-200' : ''}`}
                                                 value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
                                                 onChange={handleTambonChange}
@@ -528,7 +539,7 @@ export default function Assets() {
                                                 ))}
                                             </select>
                                         </div>
-                                        <div className="col-span-1"><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.postal_code')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_postal_code} onChange={e => setFormData({ ...formData, address_postal_code: e.target.value })} /></div>
+                                        <div className="col-span-1"><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.postal_code')}</label><input id="input-address-postal-code" type="text" className="w-full border rounded-lg p-2" value={formData.address_postal_code} onChange={e => setFormData({ ...formData, address_postal_code: e.target.value })} /></div>
                                     </div>
                                 )}
 
@@ -538,6 +549,7 @@ export default function Assets() {
                                         {/* Upload Area */}
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition cursor-pointer relative">
                                             <input
+                                                id="input-upload-images"
                                                 type="file"
                                                 multiple
                                                 accept="image/*"
@@ -618,6 +630,7 @@ export default function Assets() {
                         {/* Modal Footer */}
                         <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
                             <button
+                                id="btn-cancel-asset"
                                 type="button"
                                 onClick={() => setIsModalOpen(false)}
                                 className="px-5 py-2 text-gray-600 hover:text-gray-800 font-medium"
@@ -625,6 +638,7 @@ export default function Assets() {
                                 {t('common.cancel')}
                             </button>
                             <button
+                                id="btn-save-asset"
                                 type="submit"
                                 form="asset-form" // Link to form
                                 disabled={isLoading}
