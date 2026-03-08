@@ -5,12 +5,17 @@ import { Building2, MapPin, Image as ImageIcon, Star, Trash2, Plus, X } from 'lu
 import Swal from 'sweetalert2';
 
 export default function Assets() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [assets, setAssets] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAsset, setEditingAsset] = useState(null);
     const [activeTab, setActiveTab] = useState('info');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Address Data State
+    const [provinces, setProvinces] = useState([]);
+    const [amphures, setAmphures] = useState([]);
+    const [tambons, setTambons] = useState([]);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -24,6 +29,7 @@ export default function Assets() {
 
     useEffect(() => {
         fetchAssets();
+        fetchProvinces();
     }, []);
 
     const fetchAssets = async () => {
@@ -35,7 +41,24 @@ export default function Assets() {
         }
     };
 
-    const handleOpenModal = (asset = null) => {
+    const fetchProvinces = async () => {
+        try {
+            const response = await api.get('/thai-address/provinces');
+            setProvinces(response.data);
+        } catch (error) {
+            console.error('Error fetching provinces:', error);
+        }
+    };
+
+    const getName = (item) => {
+        if (!item) return '';
+        if (i18n.language === 'en' && item.name_en) {
+            return item.name_en;
+        }
+        return item.name_th;
+    };
+
+    const handleOpenModal = async (asset = null) => {
         setEditingAsset(asset);
         if (asset) {
             setFormData({
@@ -54,6 +77,27 @@ export default function Assets() {
                 address_province: asset.address_province || '',
                 address_postal_code: asset.address_postal_code || ''
             });
+
+            // Pre-load cascading data if address exists
+            if (asset.address_province) {
+                const prov = provinces.find(p => p.name_th === asset.address_province);
+                if (prov) {
+                    try {
+                        const ampRes = await api.get(`/thai-address/amphures/${prov.id}`);
+                        setAmphures(ampRes.data);
+
+                        if (asset.address_district) {
+                            const amp = ampRes.data.find(a => a.name_th === asset.address_district);
+                            if (amp) {
+                                const tamRes = await api.get(`/thai-address/tambons/${amp.id}`);
+                                setTambons(tamRes.data);
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error loading address data", e);
+                    }
+                }
+            }
         } else {
             resetForm();
         }
@@ -68,8 +112,65 @@ export default function Assets() {
             address_moo: '', address_soi: '', address_road: '',
             address_sub_district: '', address_district: '', address_province: '', address_postal_code: ''
         });
+        setAmphures([]);
+        setTambons([]);
         setSelectedImages([]);
         setPreviewImages([]);
+    };
+
+    const handleProvinceChange = async (e) => {
+        const provinceId = e.target.value;
+        const prov = provinces.find(p => p.id == provinceId);
+        if (prov) {
+            setFormData({
+                ...formData,
+                address_province: prov.name_th,
+                address_district: '',
+                address_sub_district: '',
+                address_postal_code: ''
+            });
+            try {
+                const res = await api.get(`/thai-address/amphures/${provinceId}`);
+                setAmphures(res.data);
+                setTambons([]);
+            } catch (err) { console.error(err); }
+        } else {
+            setFormData({ ...formData, address_province: '', address_district: '', address_sub_district: '', address_postal_code: '' });
+            setAmphures([]);
+            setTambons([]);
+        }
+    };
+
+    const handleAmphureChange = async (e) => {
+        const amphureId = e.target.value;
+        const amp = amphures.find(a => a.id == amphureId);
+        if (amp) {
+            setFormData({
+                ...formData,
+                address_district: amp.name_th,
+                address_sub_district: '',
+                address_postal_code: ''
+            });
+            try {
+                const res = await api.get(`/thai-address/tambons/${amphureId}`);
+                setTambons(res.data);
+            } catch (err) { console.error(err); }
+        } else {
+            setFormData({ ...formData, address_district: '', address_sub_district: '', address_postal_code: '' });
+            setTambons([]);
+        }
+    };
+
+    const handleTambonChange = (e) => {
+        const tambonId = e.target.value;
+        const tam = tambons.find(t => t.id == tambonId);
+        if (tam) {
+            setFormData({
+                ...formData,
+                address_sub_district: tam.name_th,
+                address_postal_code: tam.zip_code?.toString() || ''
+            });
+        }
     };
 
     const handleImageSelect = (e) => {
@@ -111,7 +212,7 @@ export default function Assets() {
 
         try {
             if (editingAsset) {
-                // For update, we need to use _method PUT since FormData doesn't support PUT directly in some setups easily
+                // For update, we need to use _method PUT
                 data.append('_method', 'PUT');
                 await api.post(`/assets/${editingAsset.id}`, data, {
                     headers: { 'Content-Type': 'multipart/form-data' }
@@ -121,12 +222,28 @@ export default function Assets() {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
+            Swal.fire({
+                title: t('common.success'),
+                text: editingAsset ? t('asset.edit_success') : t('asset.create_success'),
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
             setIsModalOpen(false);
             fetchAssets();
             resetForm();
         } catch (error) {
             console.error('Failed to save asset', error);
-            alert('Failed to save asset. Please try again.');
+            let errorMsg = error.response?.data?.message || t('common.something_went_wrong');
+            if (error.response?.data?.errors) {
+                errorMsg = Object.values(error.response.data.errors).flat().join('\n');
+            }
+            Swal.fire({
+                title: t('common.error'),
+                text: errorMsg,
+                icon: 'error',
+                confirmButtonText: t('common.confirm')
+            });
         } finally {
             setIsLoading(false);
         }
@@ -369,10 +486,49 @@ export default function Assets() {
                                         <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.moo')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_moo} onChange={e => setFormData({ ...formData, address_moo: e.target.value })} /></div>
                                         <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.soi')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_soi} onChange={e => setFormData({ ...formData, address_soi: e.target.value })} /></div>
                                         <div className="col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.road')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_road} onChange={e => setFormData({ ...formData, address_road: e.target.value })} /></div>
-                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.sub_district')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_sub_district} onChange={e => setFormData({ ...formData, address_sub_district: e.target.value })} /></div>
-                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.district')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_district} onChange={e => setFormData({ ...formData, address_district: e.target.value })} /></div>
-                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.province')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_province} onChange={e => setFormData({ ...formData, address_province: e.target.value })} /></div>
-                                        <div><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.postal_code')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_postal_code} onChange={e => setFormData({ ...formData, address_postal_code: e.target.value })} /></div>
+
+                                        <div className="col-span-1">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.province')}</label>
+                                            <select
+                                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                                                value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
+                                                onChange={handleProvinceChange}
+                                            >
+                                                <option value="">{t('address.select_province')}</option>
+                                                {provinces.map(p => (
+                                                    <option key={p.id} value={p.id}>{getName(p)}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-span-1">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.district')}</label>
+                                            <select
+                                                className={`w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition disabled:bg-gray-200 ${!formData.address_province ? 'bg-gray-200' : ''}`}
+                                                value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
+                                                onChange={handleAmphureChange}
+                                                disabled={!formData.address_province}
+                                            >
+                                                <option value="">{t('address.select_district')}</option>
+                                                {amphures.map(a => (
+                                                    <option key={a.id} value={a.id}>{getName(a)}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-span-1">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('address.sub_district')}</label>
+                                            <select
+                                                className={`w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition disabled:bg-gray-200 ${!formData.address_district ? 'bg-gray-200' : ''}`}
+                                                value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
+                                                onChange={handleTambonChange}
+                                                disabled={!formData.address_district}
+                                            >
+                                                <option value="">{t('address.select_sub_district')}</option>
+                                                {tambons.map(t => (
+                                                    <option key={t.id} value={t.id}>{getName(t)}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-span-1"><label className="block text-sm font-medium text-gray-700 mb-1">{t('address.postal_code')}</label><input type="text" className="w-full border rounded-lg p-2" value={formData.address_postal_code} onChange={e => setFormData({ ...formData, address_postal_code: e.target.value })} /></div>
                                     </div>
                                 )}
 

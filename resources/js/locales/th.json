@@ -178,7 +178,9 @@
         "confirm_delete_image_title": "ลบรูปภาพ",
         "confirm_set_main_text": "คุณแน่ใจหรือไม่ที่จะตั้งเป็นรูปภาพหลัก?",
         "confirm_set_main_title": "ตั้งเป็นรูปภาพหลัก",
-        "main_image_set": "ตั้งค่ารูปภาพหลักสำเร็จ"
+        "main_image_set": "ตั้งค่ารูปภาพหลักสำเร็จ",
+        "create_success": "สร้างทรัพย์สินใหม่สำเร็จ",
+        "edit_success": "แก้ไขข้อมูลทรัพย์สินสำเร็จ"
     },
     "contract": {
         "management": "จัดการสัญญา",

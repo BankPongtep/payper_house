@@ -177,7 +177,9 @@
         "confirm_delete_image_title": "Delete Image",
         "confirm_set_main_text": "Are you sure you want to set this as the main image?",
         "confirm_set_main_title": "Set Main Image",
-        "main_image_set": "Main image set successfully"
+        "main_image_set": "Main image set successfully",
+        "create_success": "Asset created successfully",
+        "edit_success": "Asset updated successfully"
     },
     "contract": {
         "management": "Contracts",
