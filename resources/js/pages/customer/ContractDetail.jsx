@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, QrCode, Building2, Upload, Send } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from '../../api';
+import { compressImage } from '../../utils/imageCompression';
 import { QRCodeCanvas } from 'qrcode.react';
+
 import generatePayload from 'promptpay-qr';
 
 export default function CustomerContractDetail() {
@@ -78,11 +80,26 @@ export default function CustomerContractDetail() {
         return new Date(dueDate) < new Date();
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
+            if (file.size > 1024 * 1024) {
+                Swal.fire({
+                    title: t('common.loading') || 'Processing...',
+                    text: 'Compressing image...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            }
+
+            const compressed = await compressImage(file, 1);
+
+            if (file.size > 1024 * 1024) {
+                Swal.close();
+            }
+
+            setSelectedFile(compressed);
+            setPreviewUrl(URL.createObjectURL(compressed));
         }
     };
 

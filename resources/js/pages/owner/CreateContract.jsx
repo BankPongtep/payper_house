@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../api';
+import { compressImage } from '../../utils/imageCompression';
 import Swal from 'sweetalert2';
+
 
 export default function CreateContract() {
     const { t } = useTranslation();
@@ -57,11 +59,51 @@ export default function CreateContract() {
         setPreview(null); // Reset preview on change
     };
 
-    const handleFileChange = (e) => {
-        if (e.target.name === 'main_contract') {
-            setMainContract(e.target.files[0]);
-        } else if (e.target.name === 'attachments') {
-            setAttachments(e.target.files);
+    const handleFileChange = async (e) => {
+        const { name, files: selectedFiles } = e.target;
+
+        if (name === 'main_contract') {
+            const file = selectedFiles[0];
+            if (file && file.type.startsWith('image/')) {
+                if (file.size > 1024 * 1024) {
+                    Swal.fire({
+                        title: t('common.loading') || 'Processing...',
+                        text: 'Compressing contract image...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                }
+                const compressed = await compressImage(file, 1);
+                if (file.size > 1024 * 1024) Swal.close();
+                setMainContract(compressed);
+            } else {
+                setMainContract(file);
+            }
+        } else if (name === 'attachments') {
+            const files = Array.from(selectedFiles);
+            const hasLargeImage = files.some(f => f.type.startsWith('image/') && f.size > 1024 * 1024);
+
+            if (hasLargeImage) {
+                Swal.fire({
+                    title: t('common.loading') || 'Processing...',
+                    text: 'Compressing attachments...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            }
+
+            const processedFiles = [];
+            for (const file of files) {
+                if (file.type.startsWith('image/')) {
+                    const compressed = await compressImage(file, 1);
+                    processedFiles.push(compressed);
+                } else {
+                    processedFiles.push(file); // Leave PDF/other as is
+                }
+            }
+
+            if (hasLargeImage) Swal.close();
+            setAttachments(processedFiles);
         }
     };
 

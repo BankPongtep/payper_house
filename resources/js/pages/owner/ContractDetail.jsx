@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, FileText, Calendar, CreditCard, CheckCircle, Clock, AlertCircle, Printer, XCircle, RotateCw, Edit } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from '../../api';
+import { compressImage } from '../../utils/imageCompression';
 import SignedPDFModal from '../../components/SignedPDFModal';
 import RenewalModal from '../../components/RenewalModal';
 
@@ -610,8 +611,22 @@ export default function ContractDetail() {
                                                     const file = e.target.files[0];
                                                     if (!file) return;
 
+                                                    let fileToUpload = file;
+                                                    if (file.type.startsWith('image/')) {
+                                                        if (file.size > 1024 * 1024) {
+                                                            Swal.fire({
+                                                                title: t('common.loading') || 'Processing...',
+                                                                text: 'Compressing image...',
+                                                                allowOutsideClick: false,
+                                                                didOpen: () => Swal.showLoading()
+                                                            });
+                                                        }
+                                                        fileToUpload = await compressImage(file, 1);
+                                                        if (file.size > 1024 * 1024) Swal.close();
+                                                    }
+
                                                     const formData = new FormData();
-                                                    formData.append('file', file);
+                                                    formData.append('file', fileToUpload);
                                                     formData.append('type', 'main_contract');
 
                                                     try {
@@ -639,8 +654,22 @@ export default function ContractDetail() {
                                                     const file = e.target.files[0];
                                                     if (!file) return;
 
+                                                    let fileToUpload = file;
+                                                    if (file.type.startsWith('image/')) {
+                                                        if (file.size > 1024 * 1024) {
+                                                            Swal.fire({
+                                                                title: t('common.loading') || 'Processing...',
+                                                                text: 'Compressing image...',
+                                                                allowOutsideClick: false,
+                                                                didOpen: () => Swal.showLoading()
+                                                            });
+                                                        }
+                                                        fileToUpload = await compressImage(file, 1);
+                                                        if (file.size > 1024 * 1024) Swal.close();
+                                                    }
+
                                                     const formData = new FormData();
-                                                    formData.append('file', file);
+                                                    formData.append('file', fileToUpload);
                                                     formData.append('type', 'attachment');
 
                                                     try {
@@ -678,6 +707,7 @@ export default function ContractDetail() {
                         witness1: !!contract.witness1_signature_path,
                         witness2: !!contract.witness2_signature_path
                     }}
+                    canEdit={contract.status === 'pending' || contract.status === 'pending_signature'}
                 />
             )}
 

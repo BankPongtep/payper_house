@@ -379,7 +379,10 @@ export default function Customers() {
         } catch (err) {
             let errorMsg = err.response?.data?.message || 'Operation failed';
             if (err.response?.data?.errors) {
-                errorMsg = Object.values(err.response.data.errors).flat().join('\n');
+                errorMsg = Object.values(err.response.data.errors)
+                    .flat()
+                    .map(msg => t(msg, msg)) // Try to translate, fallback to original message
+                    .join('\n');
             }
             Swal.fire({
                 icon: 'error',
@@ -433,6 +436,7 @@ export default function Customers() {
                             <Search className="h-4 w-4 text-gray-400" />
                         </div>
                         <input
+                            id="search-customer"
                             type="text"
                             placeholder="ค้นหารายชื่อ, เบอร์โทร..."
                             value={searchTerm}
@@ -441,6 +445,7 @@ export default function Customers() {
                         />
                     </div>
                     <button
+                        id="btn-add-customer"
                         onClick={handleOpenCreate}
                         className="bg-[#007BFF] text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors whitespace-nowrap flex items-center text-sm font-medium shadow-sm"
                     >
@@ -472,6 +477,7 @@ export default function Customers() {
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                                         <div className="flex justify-end items-center space-x-3">
                                             <button
+                                                id={`btn-menu-customer-${user.id}`}
                                                 onClick={(e) => { e.stopPropagation(); toggleMenu(user.id); }}
                                                 className="text-blue-500 hover:text-blue-700 focus:outline-none font-medium text-sm transition-colors"
                                             >
@@ -500,6 +506,7 @@ export default function Customers() {
                                                     </button>
                                                     <div className="border-t border-gray-100 my-0.5"></div>
                                                     <button
+                                                        id={`btn-delete-customer-${user.id}`}
                                                         onClick={() => handleDelete(user)}
                                                         className="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium"
                                                     >
@@ -530,6 +537,7 @@ export default function Customers() {
                             </div>
                             <div className="flex space-x-1 border border-gray-200 rounded-md bg-white p-0.5 shadow-sm">
                                 <button
+                                    id="btn-prev-page"
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
                                     className="px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -539,6 +547,7 @@ export default function Customers() {
                                 {[...Array(totalPages)].map((_, i) => (
                                     <button
                                         key={i}
+                                        id={`btn-page-${i + 1}`}
                                         onClick={() => setCurrentPage(i + 1)}
                                         className={`min-w-[32px] px-2 py-1 text-sm rounded transition-colors ${currentPage === i + 1
                                             ? 'bg-blue-600 text-white font-medium shadow-[0_2px_4px_rgba(37,99,235,0.2)]'
@@ -549,6 +558,7 @@ export default function Customers() {
                                     </button>
                                 ))}
                                 <button
+                                    id="btn-next-page"
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages}
                                     className="px-2.5 py-1 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -590,6 +600,7 @@ export default function Customers() {
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700">{t('user.name')}</label>
                                                     <input
+                                                        id="input-customer-name"
                                                         type="text"
                                                         name="name"
                                                         value={formData.name}
@@ -602,6 +613,7 @@ export default function Customers() {
                                                     <label className="block text-sm font-medium text-gray-700">{t('user.username')}</label>
                                                     <div className="relative">
                                                         <input
+                                                            id="input-customer-username"
                                                             type="text"
                                                             name="username"
                                                             value={formData.username}
@@ -628,6 +640,7 @@ export default function Customers() {
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700">{t('user.email')}</label>
                                                     <input
+                                                        id="input-customer-email"
                                                         type="email"
                                                         name="email"
                                                         value={formData.email}
@@ -638,6 +651,7 @@ export default function Customers() {
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700">{t('user.phone')}</label>
                                                     <input
+                                                        id="input-customer-phone"
                                                         type="text"
                                                         name="phone"
                                                         value={formData.phone}
@@ -648,6 +662,7 @@ export default function Customers() {
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700">{t('user.id_card')}</label>
                                                     <input
+                                                        id="input-customer-id-card"
                                                         type="text"
                                                         name="id_card_number"
                                                         value={formData.id_card_number}
@@ -673,6 +688,7 @@ export default function Customers() {
                                                             <div>
                                                                 <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
                                                                 <input
+                                                                    id="input-customer-password"
                                                                     type="password"
                                                                     name="password"
                                                                     value={formData.password}
@@ -684,6 +700,7 @@ export default function Customers() {
                                                             <div>
                                                                 <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
                                                                 <input
+                                                                    id="input-customer-password-confirm"
                                                                     type="password"
                                                                     name="password_confirmation"
                                                                     value={formData.password_confirmation}
@@ -705,6 +722,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.house_no')}</label>
                                                         <input
+                                                            id="input-customer-house-no"
                                                             type="text"
                                                             name="address_house_no"
                                                             value={formData.address_house_no}
@@ -715,6 +733,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.village')}</label>
                                                         <input
+                                                            id="input-customer-village"
                                                             type="text"
                                                             name="address_village"
                                                             value={formData.address_village}
@@ -728,6 +747,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.floor')}</label>
                                                         <input
+                                                            id="input-customer-floor"
                                                             type="text"
                                                             name="address_floor"
                                                             value={formData.address_floor}
@@ -739,6 +759,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.moo')}</label>
                                                         <input
+                                                            id="input-customer-moo"
                                                             type="text"
                                                             name="address_moo"
                                                             value={formData.address_moo}
@@ -752,6 +773,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.soi')}</label>
                                                         <input
+                                                            id="input-customer-soi"
                                                             type="text"
                                                             name="address_soi"
                                                             value={formData.address_soi}
@@ -762,6 +784,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.road')}</label>
                                                         <input
+                                                            id="input-customer-road"
                                                             type="text"
                                                             name="address_road"
                                                             value={formData.address_road}
@@ -775,6 +798,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.province')}</label>
                                                         <select
+                                                            id="select-customer-province"
                                                             name="address_province"
                                                             value={provinces.find(p => p.name_th === formData.address_province)?.id || ''}
                                                             onChange={handleProvinceChange}
@@ -789,6 +813,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.district')}</label>
                                                         <select
+                                                            id="select-customer-district"
                                                             name="address_district"
                                                             value={amphures.find(a => a.name_th === formData.address_district)?.id || ''}
                                                             onChange={handleAmphureChange}
@@ -807,6 +832,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.sub_district')}</label>
                                                         <select
+                                                            id="select-customer-sub-district"
                                                             name="address_sub_district"
                                                             value={tambons.find(t => t.name_th === formData.address_sub_district)?.id || ''}
                                                             onChange={handleTambonChange}
@@ -822,6 +848,7 @@ export default function Customers() {
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700">{t('address.postal_code')}</label>
                                                         <input
+                                                            id="input-customer-postal-code"
                                                             type="text"
                                                             name="address_postal_code"
                                                             value={formData.address_postal_code}
@@ -853,6 +880,7 @@ export default function Customers() {
                                                         <div className="mb-4">
                                                             <label className="block text-sm font-medium text-gray-700">{t('common.password')}</label>
                                                             <input
+                                                                id="input-customer-password"
                                                                 type="password"
                                                                 name="password"
                                                                 value={formData.password}
@@ -864,6 +892,7 @@ export default function Customers() {
                                                         <div className="mb-4">
                                                             <label className="block text-sm font-medium text-gray-700">{t('common.confirm_password')}</label>
                                                             <input
+                                                                id="input-customer-password-confirm"
                                                                 type="password"
                                                                 name="password_confirmation"
                                                                 value={formData.password_confirmation}
@@ -880,6 +909,7 @@ export default function Customers() {
 
                                     <div className="flex justify-end space-x-3 mt-8 pt-4 border-t">
                                         <button
+                                            id="btn-close-modal"
                                             type="button"
                                             onClick={handleCloseModal}
                                             className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
@@ -887,6 +917,7 @@ export default function Customers() {
                                             {t('common.cancel')}
                                         </button>
                                         <button
+                                            id="btn-save-customer"
                                             type="submit"
                                             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                                         >

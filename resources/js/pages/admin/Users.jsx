@@ -321,7 +321,20 @@ export default function Users() {
             fetchUsers();
             handleCloseModal();
         } catch (err) {
-            setError(err.response?.data?.message || 'Operation failed');
+            let errorMsg = err.response?.data?.message || 'Operation failed';
+            if (err.response?.data?.errors) {
+                errorMsg = Object.values(err.response.data.errors)
+                    .flat()
+                    .map(msg => t(msg, msg))
+                    .join('\n');
+            }
+            setError(errorMsg);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: errorMsg,
+                confirmButtonText: 'ตกลง'
+            });
         }
     };
 
@@ -384,6 +397,7 @@ export default function Users() {
                 <h1 className="text-2xl font-bold text-gray-800">จัดการผู้ใช้งาน</h1>
                 <div className="flex w-full md:w-auto space-x-3 items-center">
                     <select
+                        id="filter-user-role"
                         value={filterRole}
                         onChange={(e) => setFilterRole(e.target.value)}
                         className="px-4 py-2 border-0 bg-gray-100/70 rounded-lg focus:ring-2 focus:ring-blue-100 focus:bg-white transition-colors text-sm text-gray-600 outline-none cursor-pointer h-[36px]"
@@ -398,6 +412,7 @@ export default function Users() {
                             <Search className="h-4 w-4 text-gray-400" />
                         </div>
                         <input
+                            id="search-user"
                             type="text"
                             placeholder="ค้นหาชื่อผู้ใช้, ชื่อ-นามสกุล..."
                             value={searchTerm}
@@ -406,6 +421,7 @@ export default function Users() {
                         />
                     </div>
                     <button
+                        id="btn-add-user"
                         onClick={handleOpenCreate}
                         className="bg-[#007BFF] text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors whitespace-nowrap flex items-center text-sm font-medium shadow-sm"
                     >
@@ -452,6 +468,7 @@ export default function Users() {
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                                     <div className="flex justify-end items-center space-x-3">
                                         <button
+                                            id={`btn-menu-user-${user.id}`}
                                             onClick={(e) => { e.stopPropagation(); toggleMenu(user.id); }}
                                             className="text-blue-500 hover:text-blue-700 focus:outline-none font-medium text-sm transition-colors"
                                         >
@@ -479,6 +496,7 @@ export default function Users() {
                                                     {t('common.change_password')}
                                                 </button>
                                                 <button
+                                                    id={`btn-lock-user-${user.id}`}
                                                     onClick={() => handleToggleLock(user)}
                                                     className={`w-full text-left block px-4 py-2.5 text-sm hover:bg-gray-50 font-medium ${user.is_locked ? 'text-green-600' : 'text-amber-600'}`}
                                                 >
@@ -486,6 +504,7 @@ export default function Users() {
                                                 </button>
                                                 <div className="border-t border-gray-100 my-0.5"></div>
                                                 <button
+                                                    id={`btn-delete-user-${user.id}`}
                                                     onClick={() => handleDelete(user)}
                                                     className="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium"
                                                 >
@@ -595,6 +614,7 @@ export default function Users() {
                                                         {t('user.username')} <span className="text-red-500">*</span>
                                                     </label>
                                                     <input
+                                                        id="input-user-username"
                                                         type="text"
                                                         name="username"
                                                         value={formData.username}
@@ -612,6 +632,7 @@ export default function Users() {
                                                     </label>
                                                     <div className="relative">
                                                         <input
+                                                            id="input-user-email"
                                                             type="email"
                                                             name="email"
                                                             value={formData.email}
@@ -662,6 +683,7 @@ export default function Users() {
                                                             ระดับผู้ใช้ <span className="text-red-500">*</span>
                                                         </label>
                                                         <select
+                                                            id="select-user-role"
                                                             name="role"
                                                             value={formData.role}
                                                             onChange={handleChange}
@@ -904,6 +926,7 @@ export default function Users() {
                                         <div className="mb-6">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.confirm_password')}</label>
                                             <input
+                                                id="input-user-password-confirm"
                                                 type="password"
                                                 name="password_confirmation"
                                                 value={formData.password_confirmation}

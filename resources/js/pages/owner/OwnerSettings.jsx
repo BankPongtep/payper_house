@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Settings, Upload, Trash2, CreditCard, Save, QrCode, Percent } from 'lucide-react';
-import Swal from 'sweetalert2';
 import api from '../../api';
+import { compressImage } from '../../utils/imageCompression';
+import Swal from 'sweetalert2';
+
 
 export default function OwnerSettings() {
     const { t } = useTranslation();
@@ -43,11 +45,26 @@ export default function OwnerSettings() {
         setSettings({ ...settings, [e.target.name]: e.target.value });
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
+            if (file.size > 1024 * 1024) {
+                Swal.fire({
+                    title: t('common.loading') || 'Processing...',
+                    text: 'Compressing QR code...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            }
+
+            const compressed = await compressImage(file, 1);
+
+            if (file.size > 1024 * 1024) {
+                Swal.close();
+            }
+
+            setSelectedFile(compressed);
+            setPreviewUrl(URL.createObjectURL(compressed));
         }
     };
 

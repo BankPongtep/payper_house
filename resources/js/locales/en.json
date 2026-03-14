@@ -357,5 +357,13 @@
     "finance": {
         "vat_rate": "VAT Rate",
         "interest_rate": "Interest Rate"
+    },
+    "validation": {
+        "required": "This field is required",
+        "email": "Invalid email address",
+        "unique": "This value is already taken",
+        "min": "Must be at least {{count}} characters",
+        "confirmed": "Confirmation does not match",
+        "numeric": "Must be a number"
     }
 }

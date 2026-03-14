@@ -25,7 +25,7 @@ class AssetController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'nullable|numeric',
-            'status' => 'required|in:available,leased,rented,sold',
+            'status' => 'required|in:available,leased,rented,sold,under_maintenance,sold_direct_installment',
             'images.*' => 'nullable|image|max:5120', // Max 5MB per image
             'address_house_no' => 'nullable|string',
             'address_village' => 'nullable|string',
@@ -89,7 +89,7 @@ class AssetController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255',
             'price' => 'nullable|numeric',
-            'status' => 'sometimes|in:available,leased,rented,sold',
+            'status' => 'sometimes|in:available,leased,rented,sold,under_maintenance,sold_direct_installment',
             'images.*' => 'nullable|image|max:5120',
             'address_house_no' => 'nullable|string',
             'address_village' => 'nullable|string',

@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import api from '../../api';
 import { useTranslation } from 'react-i18next';
 import { Building2, MapPin, Image as ImageIcon, Star, Trash2, Plus, X } from 'lucide-react';
+import { compressImage } from '../../utils/imageCompression';
 import Swal from 'sweetalert2';
+
 
 export default function Assets() {
     const { t, i18n } = useTranslation();
@@ -173,18 +175,40 @@ export default function Assets() {
         }
     };
 
-    const handleImageSelect = (e) => {
+    const handleImageSelect = async (e) => {
         const files = Array.from(e.target.files);
-        const validFiles = files.filter(file => file.size <= 5 * 1024 * 1024); // 5MB limit
 
-        if (files.length !== validFiles.length) {
-            alert('Some images were skipped because they exceed the 5MB limit.');
+        // Use toast to notify user that compression is happening if many files
+        if (files.some(f => f.size > 1024 * 1024)) {
+            Swal.fire({
+                title: t('common.loading') || 'Processing...',
+                text: 'Compressing large images to save space...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
         }
 
-        setSelectedImages([...selectedImages, ...validFiles]);
+        const compressedFiles = [];
+        for (const file of files) {
+            try {
+                // Compress images to max 1MB
+                const compressed = await compressImage(file, 1);
+                compressedFiles.push(compressed);
+            } catch (err) {
+                console.error('Compression failed for', file.name, err);
+                compressedFiles.push(file); // Fallback to original file
+            }
+        }
+
+        // Close loading dialog if it was opened
+        if (files.some(f => f.size > 1024 * 1024)) {
+            Swal.close();
+        }
+
+        setSelectedImages([...selectedImages, ...compressedFiles]);
 
         // Create previews
-        const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+        const newPreviews = compressedFiles.map(file => URL.createObjectURL(file));
         setPreviewImages([...previewImages, ...newPreviews]);
     };
 
@@ -236,7 +260,10 @@ export default function Assets() {
             console.error('Failed to save asset', error);
             let errorMsg = error.response?.data?.message || t('common.something_went_wrong');
             if (error.response?.data?.errors) {
-                errorMsg = Object.values(error.response.data.errors).flat().join('\n');
+                errorMsg = Object.values(error.response.data.errors)
+                    .flat()
+                    .map(msg => t(msg, msg))
+                    .join('\n');
             }
             Swal.fire({
                 title: t('common.error'),
@@ -561,7 +588,7 @@ export default function Assets() {
                                                     <Plus size={24} />
                                                 </div>
                                                 <p className="font-medium">{t('asset.upload_images')}</p>
-                                                <p className="text-xs text-gray-400">Max 5MB per file</p>
+                                                <p className="text-xs text-gray-400">Max 1MB per file (Auto-resize)</p>
                                             </div>
                                         </div>
 
